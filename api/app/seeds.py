@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
-from app.main import Usuario, Especialidad, PerfilDoctor, DoctorEspecialidad, Cita, Resena, Notificacion
+from app.main import Usuario, Especialidad, PerfilDoctor, DoctorEspecialidad, Cita, Resena, Notificacion, pwd_context
 from app.main import TipoRol, EstadoCita, TipoNotificacion, EventoNotificacion
 
 def crear_semillas_completas(db: Session):
@@ -45,7 +45,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Admin Principal",
             email="admin@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",  # password123
+            password_hash=pwd_context.hash("password123"),
             telefono="3000000000",
             fecha_nacimiento=date(1970, 1, 1),
             rol=TipoRol.ADMINISTRADOR
@@ -53,7 +53,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Admin Soporte",
             email="soporte@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3000000001",
             fecha_nacimiento=date(1975, 6, 15),
             rol=TipoRol.ADMINISTRADOR
@@ -68,7 +68,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Juan Carlos Pérez González",
             email="juan.perez@gmail.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3001234567",
             fecha_nacimiento=date(1985, 3, 15),
             rol=TipoRol.PACIENTE
@@ -76,7 +76,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="María Fernanda García López",
             email="maria.garcia@gmail.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3007654321",
             fecha_nacimiento=date(1990, 7, 22),
             rol=TipoRol.PACIENTE
@@ -84,7 +84,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Carlos Alberto Rodríguez Martínez",
             email="carlos.rodriguez@gmail.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3002345678",
             fecha_nacimiento=date(1978, 11, 3),
             rol=TipoRol.PACIENTE
@@ -92,7 +92,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Ana Sofía Hernández Vargas",
             email="ana.hernandez@gmail.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3008765432",
             fecha_nacimiento=date(1992, 4, 28),
             rol=TipoRol.PACIENTE
@@ -100,7 +100,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Luis Miguel Torres Sánchez",
             email="luis.torres@gmail.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3003456789",
             fecha_nacimiento=date(1987, 9, 12),
             rol=TipoRol.PACIENTE
@@ -115,7 +115,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Dr. Carlos Eduardo Mendoza Rivera",
             email="carlos.mendoza@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3101234567",
             fecha_nacimiento=date(1975, 12, 8),
             rol=TipoRol.DOCTOR
@@ -123,7 +123,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Dra. Ana María Rodríguez Castillo",
             email="ana.rodriguez@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3109876543",
             fecha_nacimiento=date(1980, 5, 18),
             rol=TipoRol.DOCTOR
@@ -131,7 +131,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Dr. Miguel Ángel Ramírez Delgado",
             email="miguel.ramirez@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3105678901",
             fecha_nacimiento=date(1972, 8, 25),
             rol=TipoRol.DOCTOR
@@ -139,7 +139,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Dra. Laura Patricia Jiménez Morales",
             email="laura.jimenez@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3106789012",
             fecha_nacimiento=date(1985, 2, 14),
             rol=TipoRol.DOCTOR
@@ -147,7 +147,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Dr. Fernando José Guerrero Ospina",
             email="fernando.guerrero@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3107890123",
             fecha_nacimiento=date(1978, 10, 30),
             rol=TipoRol.DOCTOR
@@ -155,7 +155,7 @@ def crear_semillas_completas(db: Session):
         Usuario(
             nombre_completo="Dra. Patricia Elena Vásquez Cruz",
             email="patricia.vasquez@medicitas.com",
-            password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LeHDFyF/0c8f3yB5S",
+            password_hash=pwd_context.hash("password123"),
             telefono="3108901234",
             fecha_nacimiento=date(1982, 6, 7),
             rol=TipoRol.DOCTOR

@@ -10,7 +10,20 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
+from app.main import Base, engine
 from app.seeds import crear_semillas_completas
+
+def recreate_database():
+    """Elimina y recrea todas las tablas de la base de datos."""
+    print("🗑️  Eliminando tablas existentes...")
+    try:
+        Base.metadata.drop_all(bind=engine)
+        print("✨ Creando nuevas tablas...")
+        Base.metadata.create_all(bind=engine)
+        print("✅ Base de datos recreada exitosamente.")
+    except Exception as e:
+        print(f"❌ Error al recrear la base de datos: {str(e)}")
+        sys.exit(1)
 
 def main():
     """Función principal para ejecutar las semillas"""
@@ -18,6 +31,13 @@ def main():
     
     # Cargar variables de entorno
     load_dotenv()
+    
+    # Argumento para recrear la base de datos
+    if "--recreate" in sys.argv:
+        print("🔥 Opción --recreate detectada. Se recreará la base de datos.")
+        recreate_database()
+
+    print("🌱 Iniciando creación de semillas para MediCitas...")
     
     # Configuración de la base de datos
     DATABASE_URL = os.getenv("DATABASE_URL")
@@ -27,9 +47,8 @@ def main():
         sys.exit(1)
     
     try:
-        # Crear conexión a la base de datos
-        print("📡 Conectando a la base de datos...")
-        engine = create_engine(DATABASE_URL)
+        # La conexión ya la establece el 'engine' importado
+        print("📡 Verificando conexión a la base de datos...")
         SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         
         # Probar la conexión
