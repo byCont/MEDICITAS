@@ -171,37 +171,37 @@ def crear_semillas_completas(db: Session):
     # 5. Crear Perfiles de Doctores
     perfiles_doctores = [
         PerfilDoctor(
-            usuario_id=3,  # Dr. Carlos Eduardo Mendoza Rivera
+            usuario_id=8,  # Dr. Carlos Eduardo Mendoza Rivera
             cedula_profesional="12345678",
             biografia="Especialista en Cardiología con 15 años de experiencia. Graduado de la Universidad Nacional de Colombia. Especialista en cirugía cardiovascular y medicina preventiva.",
             foto_perfil_url="https://example.com/fotos/carlos-mendoza.jpg"
         ),
         PerfilDoctor(
-            usuario_id=4,  # Dra. Ana María Rodríguez Castillo
+            usuario_id=9,  # Dra. Ana María Rodríguez Castillo
             cedula_profesional="87654321",
             biografia="Especialista en Dermatología y Neurología. Más de 12 años de experiencia en el tratamiento de enfermedades de la piel y trastornos neurológicos.",
             foto_perfil_url="https://example.com/fotos/ana-rodriguez.jpg"
         ),
         PerfilDoctor(
-            usuario_id=5,  # Dr. Miguel Ángel Ramírez Delgado
+            usuario_id=10,  # Dr. Miguel Ángel Ramírez Delgado
             cedula_profesional="11223344",
             biografia="Especialista en Pediatría con enfoque en desarrollo infantil. 20 años de experiencia atendiendo niños y adolescentes.",
             foto_perfil_url="https://example.com/fotos/miguel-ramirez.jpg"
         ),
         PerfilDoctor(
-            usuario_id=6,  # Dra. Laura Patricia Jiménez Morales
+            usuario_id=11,  # Dra. Laura Patricia Jiménez Morales
             cedula_profesional="55667788",
             biografia="Especialista en Ginecología y Obstetricia. Dedicada al cuidado integral de la salud femenina con 10 años de experiencia.",
             foto_perfil_url="https://example.com/fotos/laura-jimenez.jpg"
         ),
         PerfilDoctor(
-            usuario_id=7,  # Dr. Fernando José Guerrero Ospina
+            usuario_id=12,  # Dr. Fernando José Guerrero Ospina
             cedula_profesional="99887766",
             biografia="Especialista en Traumatología y Ortopedia. Experto en cirugía de columna y articulaciones con 18 años de experiencia.",
             foto_perfil_url="https://example.com/fotos/fernando-guerrero.jpg"
         ),
         PerfilDoctor(
-            usuario_id=8,  # Dra. Patricia Elena Vásquez Cruz
+            usuario_id=13,  # Dra. Patricia Elena Vásquez Cruz
             cedula_profesional="33445566",
             biografia="Especialista en Oftalmología y Psiquiatría. Enfoque integral en salud mental y visual con 14 años de experiencia.",
             foto_perfil_url="https://example.com/fotos/patricia-vasquez.jpg"
@@ -251,7 +251,7 @@ def crear_semillas_completas(db: Session):
     citas = [
         # Citas programadas
         Cita(
-            paciente_id=9,  # Juan Carlos Pérez González
+            paciente_id=3,  # Juan Carlos Pérez González
             doctor_id=1,    # Dr. Carlos Eduardo Mendoza Rivera
             especialidad_id=1,  # Cardiología
             fecha_hora=base_date + timedelta(days=2, hours=9),
@@ -260,7 +260,7 @@ def crear_semillas_completas(db: Session):
             estado=EstadoCita.PROGRAMADA
         ),
         Cita(
-            paciente_id=10,  # María Fernanda García López
+            paciente_id=4,  # María Fernanda García López
             doctor_id=2,     # Dra. Ana María Rodríguez Castillo
             especialidad_id=2,  # Dermatología
             fecha_hora=base_date + timedelta(days=3, hours=14),
@@ -269,7 +269,7 @@ def crear_semillas_completas(db: Session):
             estado=EstadoCita.CONFIRMADA
         ),
         Cita(
-            paciente_id=11,  # Carlos Alberto Rodríguez Martínez
+            paciente_id=5,  # Carlos Alberto Rodríguez Martínez
             doctor_id=3,     # Dr. Miguel Ángel Ramírez Delgado
             especialidad_id=4,  # Pediatría
             fecha_hora=base_date + timedelta(days=5, hours=10),
@@ -280,7 +280,7 @@ def crear_semillas_completas(db: Session):
         
         # Citas completadas (para poder crear reseñas)
         Cita(
-            paciente_id=12,  # Ana Sofía Hernández Vargas
+            paciente_id=6,  # Ana Sofía Hernández Vargas
             doctor_id=4,     # Dra. Laura Patricia Jiménez Morales
             especialidad_id=5,  # Ginecología
             fecha_hora=datetime.now() - timedelta(days=7, hours=11),
@@ -290,7 +290,7 @@ def crear_semillas_completas(db: Session):
             notas_doctor="Examen normal. Se recomienda control en 6 meses."
         ),
         Cita(
-            paciente_id=13,  # Luis Miguel Torres Sánchez
+            paciente_id=7,  # Luis Miguel Torres Sánchez
             doctor_id=5,     # Dr. Fernando José Guerrero Ospina
             especialidad_id=6,  # Traumatología
             fecha_hora=datetime.now() - timedelta(days=3, hours=15),
@@ -302,7 +302,7 @@ def crear_semillas_completas(db: Session):
         
         # Citas canceladas
         Cita(
-            paciente_id=9,   # Juan Carlos Pérez González
+            paciente_id=3,   # Juan Carlos Pérez González
             doctor_id=6,     # Dra. Patricia Elena Vásquez Cruz
             especialidad_id=7,  # Oftalmología
             fecha_hora=base_date + timedelta(days=1, hours=16),
@@ -322,7 +322,7 @@ def crear_semillas_completas(db: Session):
     resenas = [
         Resena(
             cita_id=4,  # Cita completada de Ana Sofía
-            paciente_id=12,
+            paciente_id=6,
             doctor_id=4,
             calificacion=5,
             comentario="Excelente atención de la Dra. Jiménez. Muy profesional y amable.",
@@ -330,7 +330,7 @@ def crear_semillas_completas(db: Session):
         ),
         Resena(
             cita_id=5,  # Cita completada de Luis Miguel
-            paciente_id=13,
+            paciente_id=7,
             doctor_id=5,
             calificacion=4,
             comentario="Buen diagnóstico y tratamiento. El doctor fue muy claro en las explicaciones.",
@@ -348,7 +348,7 @@ def crear_semillas_completas(db: Session):
     notificaciones = [
         # Notificación de cita programada
         Notificacion(
-            usuario_id=9,  # Juan Carlos Pérez González
+            usuario_id=3,  # Juan Carlos Pérez González
             cita_id=1,
             tipo=TipoNotificacion.EMAIL,
             evento=EventoNotificacion.CITA_PROGRAMADA,
@@ -360,7 +360,7 @@ def crear_semillas_completas(db: Session):
         
         # Notificación de cita confirmada
         Notificacion(
-            usuario_id=10,  # María Fernanda García López
+            usuario_id=4,  # María Fernanda García López
             cita_id=2,
             tipo=TipoNotificacion.SMS,
             evento=EventoNotificacion.CITA_CONFIRMADA,
@@ -370,7 +370,7 @@ def crear_semillas_completas(db: Session):
         
         # Recordatorio 24 horas
         Notificacion(
-            usuario_id=11,  # Carlos Alberto Rodríguez Martínez
+            usuario_id=5,  # Carlos Alberto Rodríguez Martínez
             cita_id=3,
             tipo=TipoNotificacion.PUSH,
             evento=EventoNotificacion.RECORDATORIO_24H,
@@ -380,7 +380,7 @@ def crear_semillas_completas(db: Session):
         
         # Notificación de cita cancelada
         Notificacion(
-            usuario_id=9,  # Juan Carlos Pérez González
+            usuario_id=3,  # Juan Carlos Pérez González
             cita_id=6,
             tipo=TipoNotificacion.EMAIL,
             evento=EventoNotificacion.CITA_CANCELADA,
