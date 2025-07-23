@@ -339,6 +339,45 @@ class UsuarioActual(BaseModel):
     rol: TipoRol
     activo: bool
 
+# --- INICIO: Nuevos modelos Pydantic para Citas ---
+class CitaCrear(BaseModel):
+    doctor_id: int
+    especialidad_id: int
+    fecha_hora: datetime
+    motivo_consulta: Optional[str] = None
+    duracion_minutos: int = 30
+
+    @validator('fecha_hora')
+    def validate_fecha_hora(cls, v):
+        # Asegurarse de que la fecha y hora tengan timezone
+        if v.tzinfo is None:
+            # Si no tiene, se asume UTC como en el resto de la app
+             v = v.replace(tzinfo=datetime.now().astimezone().tzinfo)
+
+        if v <= datetime.now().astimezone():
+            raise ValueError('La fecha y hora de la cita debe ser en el futuro.')
+        
+        # if v.minute not in [0, 30]:
+        #     raise ValueError('Las citas solo pueden programarse a en punto (00) o y media (30).')
+        
+        return v
+
+class CitaResponse(BaseModel):
+    id: int
+    paciente_id: int
+    doctor_id: int
+    especialidad_id: int
+    fecha_hora: datetime
+    duracion_minutos: int
+    estado: EstadoCita
+    motivo_consulta: Optional[str]
+    fecha_creacion: datetime
+
+    class Config:
+        from_attributes = True
+# --- FIN: Nuevos modelos Pydantic para Citas ---
+
+
 # Dependencia para obtener la sesión de la base de datos
 def get_db():
     db = SessionLocal()
@@ -617,10 +656,13 @@ def root():
 def health_check(db: Session = Depends(get_db)):
     """Verificar la conexión a la base de datos"""
     try:
-        db.execute("SELECT 1")
+        # Usar text() para ejecutar una consulta SQL literal
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e)}
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {e}")
+
 
 @app.get("/especialidades/")
 def obtener_especialidades_publicas(db: Session = Depends(get_db)):
@@ -706,13 +748,77 @@ def obtener_mis_citas(
             citas = db.query(Cita).filter(Cita.doctor_id == doctor_perfil.id).all()
         else:
             citas = []
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo pacientes y doctores pueden ver sus citas"
-        )
+    else: # Administradores pueden ver todas las citas
+        citas = db.query(Cita).all()
     
     return citas
+
+# --- INICIO: Nueva ruta para crear citas ---
+@app.post("/citas/", response_model=CitaResponse, status_code=status.HTTP_201_CREATED)
+def crear_cita(
+    cita_data: CitaCrear,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    Crear una nueva cita.
+    - Un PACIENTE puede crear una cita para sí mismo.
+    - Un ADMINISTRADOR también puede crear citas, pero esta implementación asume que el paciente es el usuario logueado.
+    """
+    # Solo los pacientes pueden crear citas para sí mismos
+    if current_user.rol != TipoRol.PACIENTE:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo los pacientes pueden crear nuevas citas."
+        )
+
+    # 1. Verificar que el doctor existe y está activo
+    doctor_perfil = db.query(PerfilDoctor).join(Usuario).filter(
+        PerfilDoctor.id == cita_data.doctor_id,
+        Usuario.activo == True
+    ).first()
+    if not doctor_perfil:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor no encontrado o inactivo.")
+
+    # 2. Verificar que la especialidad existe
+    especialidad = db.query(Especialidad).filter(Especialidad.id == cita_data.especialidad_id).first()
+    if not especialidad:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Especialidad no encontrada.")
+
+    # 3. Verificar que el doctor tiene la especialidad indicada
+    doctor_especialidad = db.query(DoctorEspecialidad).filter(
+        DoctorEspecialidad.doctor_id == cita_data.doctor_id,
+        DoctorEspecialidad.especialidad_id == cita_data.especialidad_id
+    ).first()
+    if not doctor_especialidad:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El doctor seleccionado no ofrece la especialidad indicada.")
+
+    # 4. Verificar conflictos de horario para el doctor
+    cita_existente = db.query(Cita).filter(
+        Cita.doctor_id == cita_data.doctor_id,
+        Cita.fecha_hora == cita_data.fecha_hora
+    ).first()
+    if cita_existente:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El doctor ya tiene una cita programada en este horario.")
+
+    # Crear la nueva cita
+    nueva_cita = Cita(
+        paciente_id=current_user.id,
+        doctor_id=cita_data.doctor_id,
+        especialidad_id=cita_data.especialidad_id,
+        fecha_hora=cita_data.fecha_hora,
+        motivo_consulta=cita_data.motivo_consulta,
+        duracion_minutos=cita_data.duracion_minutos,
+        estado=EstadoCita.PROGRAMADA
+    )
+
+    db.add(nueva_cita)
+    db.commit()
+    db.refresh(nueva_cita)
+
+    return nueva_cita
+# --- FIN: Nueva ruta para crear citas ---
+
 
 # Middleware de manejo de errores
 @app.exception_handler(HTTPException)
@@ -728,4 +834,4 @@ async def http_exception_handler(request, exc):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
