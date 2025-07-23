@@ -90,11 +90,11 @@ class Usuario(Base):
     fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     
     # Relaciones
-    perfil_doctor = relationship("PerfilDoctor", back_populates="usuario", uselist=False)
+    perfil_doctor = relationship("PerfilDoctor", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
     citas_como_paciente = relationship("Cita", foreign_keys="Cita.paciente_id", back_populates="paciente")
     resenas = relationship("Resena", back_populates="paciente")
     notificaciones = relationship("Notificacion", back_populates="usuario")
-    tokens_refresh = relationship("RefreshToken", back_populates="usuario")
+    tokens_refresh = relationship("RefreshToken", back_populates="usuario", cascade="all, delete-orphan")
 
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
@@ -133,7 +133,7 @@ class PerfilDoctor(Base):
     
     # Relaciones
     usuario = relationship("Usuario", back_populates="perfil_doctor")
-    especialidades = relationship("DoctorEspecialidad", back_populates="doctor")
+    especialidades = relationship("DoctorEspecialidad", back_populates="doctor", cascade="all, delete-orphan")
     citas = relationship("Cita", back_populates="doctor")
     resenas = relationship("Resena", back_populates="doctor")
 
@@ -284,26 +284,45 @@ class JWTUtils:
                 detail="Token inválido"
             )
 
-# Modelos Pydantic para autenticación
-class UsuarioRegistro(BaseModel):
+# --- INICIO: Modelos Pydantic para Registro ---
+
+# Modelo base para datos de usuario
+class UsuarioBase(BaseModel):
     nombre_completo: str
     email: EmailStr
     password: str
     telefono: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
-    rol: TipoRol = TipoRol.PACIENTE
-    
+
     @validator('password')
     def validate_password(cls, v):
         if not PasswordUtils.validate_password_strength(v):
             raise ValueError('La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números')
         return v
-    
+
     @validator('nombre_completo')
     def validate_nombre(cls, v):
         if len(v.strip()) < 2:
             raise ValueError('El nombre completo debe tener al menos 2 caracteres')
         return v.strip()
+
+# Modelo para registro de paciente
+class UsuarioRegistro(UsuarioBase):
+    rol: TipoRol = TipoRol.PACIENTE
+
+# Modelo para datos del perfil del doctor
+class PerfilDoctorCrear(BaseModel):
+    cedula_profesional: str
+    biografia: Optional[str] = None
+    foto_perfil_url: Optional[str] = None
+
+# Modelo para registro de doctor (combina usuario, perfil y especialidades)
+class DoctorRegistro(BaseModel):
+    usuario: UsuarioBase
+    perfil: PerfilDoctorCrear
+    especialidades_ids: List[int]
+
+# --- FIN: Modelos Pydantic para Registro ---
 
 class UsuarioLogin(BaseModel):
     email: EmailStr
@@ -333,13 +352,38 @@ class UsuarioResponse(BaseModel):
     class Config:
         from_attributes = True
 
+# --- INICIO: Modelos de Respuesta para Doctor ---
+class EspecialidadResponse(BaseModel):
+    id: int
+    nombre: str
+
+    class Config:
+        from_attributes = True
+
+class PerfilDoctorResponse(BaseModel):
+    id: int
+    cedula_profesional: str
+    biografia: Optional[str]
+    foto_perfil_url: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+class DoctorResponse(UsuarioResponse):
+    perfil_doctor: PerfilDoctorResponse
+    especialidades: List[EspecialidadResponse]
+
+    class Config:
+        from_attributes = True
+# --- FIN: Modelos de Respuesta para Doctor ---
+
+
 class UsuarioActual(BaseModel):
     id: int
     email: str
     rol: TipoRol
     activo: bool
 
-# --- INICIO: Nuevos modelos Pydantic para Citas ---
 class CitaCrear(BaseModel):
     doctor_id: int
     especialidad_id: int
@@ -349,16 +393,14 @@ class CitaCrear(BaseModel):
 
     @validator('fecha_hora')
     def validate_fecha_hora(cls, v):
-        # Asegurarse de que la fecha y hora tengan timezone
         if v.tzinfo is None:
-            # Si no tiene, se asume UTC como en el resto de la app
              v = v.replace(tzinfo=datetime.now().astimezone().tzinfo)
 
         if v <= datetime.now().astimezone():
             raise ValueError('La fecha y hora de la cita debe ser en el futuro.')
         
-        # if v.minute not in [0, 30]:
-        #     raise ValueError('Las citas solo pueden programarse a en punto (00) o y media (30).')
+        if v.minute not in [0, 30]:
+            raise ValueError('Las citas solo pueden programarse a en punto (00) o y media (30).')
         
         return v
 
@@ -375,8 +417,6 @@ class CitaResponse(BaseModel):
 
     class Config:
         from_attributes = True
-# --- FIN: Nuevos modelos Pydantic para Citas ---
-
 
 # Dependencia para obtener la sesión de la base de datos
 def get_db():
@@ -394,54 +434,100 @@ class AuthService:
     def authenticate_user(db: Session, email: str, password: str) -> Optional[Usuario]:
         """Autenticar usuario"""
         user = db.query(Usuario).filter(Usuario.email == email).first()
-        if not user:
-            return None
-        if not user.activo:
-            return None
-        if not PasswordUtils.verify_password(password, user.password_hash):
+        if not user or not user.activo or not PasswordUtils.verify_password(password, user.password_hash):
             return None
         return user
     
     @staticmethod
     def create_user(db: Session, user_data: UsuarioRegistro) -> Usuario:
-        """Crear nuevo usuario"""
-        # Verificar si el email ya existe
+        """Crear nuevo usuario PACIENTE"""
         if db.query(Usuario).filter(Usuario.email == user_data.email).first():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="El email ya está registrado"
             )
         
-        # Crear usuario
         hashed_password = PasswordUtils.hash_password(user_data.password)
         db_user = Usuario(
-            nombre_completo=user_data.nombre_completo,
-            email=user_data.email,
+            **user_data.model_dump(exclude={"password", "rol"}),
             password_hash=hashed_password,
-            telefono=user_data.telefono,
-            fecha_nacimiento=user_data.fecha_nacimiento,
-            rol=user_data.rol
+            rol=TipoRol.PACIENTE
         )
         
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
         return db_user
+
+    @staticmethod
+    def create_doctor(db: Session, doctor_data: DoctorRegistro) -> Usuario:
+        """Crear un nuevo usuario DOCTOR con su perfil y especialidades"""
+        # Validar duplicados
+        if db.query(Usuario).filter(Usuario.email == doctor_data.usuario.email).first():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El email ya está registrado.")
+        
+        if db.query(PerfilDoctor).filter(PerfilDoctor.cedula_profesional == doctor_data.perfil.cedula_profesional).first():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="La cédula profesional ya está registrada.")
+
+        # Validar que las especialidades existan
+        if not doctor_data.especialidades_ids:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Debe proporcionar al menos una especialidad.")
+            
+        especialidades_validas = db.query(Especialidad).filter(Especialidad.id.in_(doctor_data.especialidades_ids)).all()
+        if len(especialidades_validas) != len(doctor_data.especialidades_ids):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Una o más especialidades no son válidas.")
+
+        # Iniciar transacción
+        try:
+            # 1. Crear el usuario
+            hashed_password = PasswordUtils.hash_password(doctor_data.usuario.password)
+            db_user = Usuario(
+                **doctor_data.usuario.model_dump(exclude={"password"}),
+                password_hash=hashed_password,
+                rol=TipoRol.DOCTOR
+            )
+            db.add(db_user)
+            db.flush() # Para obtener el ID del usuario antes del commit
+
+            # 2. Crear el perfil del doctor
+            db_perfil = PerfilDoctor(
+                **doctor_data.perfil.model_dump(),
+                usuario_id=db_user.id
+            )
+            db.add(db_perfil)
+            db.flush() # Para obtener el ID del perfil antes del commit
+
+            # 3. Asociar especialidades
+            for esp_id in doctor_data.especialidades_ids:
+                db_doc_esp = DoctorEspecialidad(doctor_id=db_perfil.id, especialidad_id=esp_id)
+                db.add(db_doc_esp)
+
+            db.commit()
+            db.refresh(db_user)
+            
+            # Cargar las relaciones para la respuesta
+            db.refresh(db_user.perfil_doctor)
+            for de in db_user.perfil_doctor.especialidades:
+                db.refresh(de.especialidad)
+
+            return db_user
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error al crear el doctor: {e}"
+            )
     
     @staticmethod
     def create_tokens(db: Session, user: Usuario) -> Token:
         """Crear tokens de acceso y refresco"""
-        # Crear access token
         access_token = JWTUtils.create_access_token(
             data={"sub": user.email, "user_id": user.id, "role": user.rol.value}
         )
-        
-        # Crear refresh token
         refresh_token = JWTUtils.create_refresh_token(
             data={"sub": user.email, "user_id": user.id}
         )
         
-        # Guardar refresh token en la base de datos
         db_refresh_token = RefreshToken(
             usuario_id=user.id,
             token=refresh_token,
@@ -449,8 +535,7 @@ class AuthService:
         )
         db.add(db_refresh_token)
         
-        # Actualizar último acceso
-        user.ultimo_acceso = datetime.utcnow()
+        user.ultimo_acceso = func.now()
         db.commit()
         
         return Token(
@@ -462,7 +547,6 @@ class AuthService:
     @staticmethod
     def refresh_access_token(db: Session, refresh_token: str) -> Token:
         """Refrescar token de acceso"""
-        # Verificar refresh token en la base de datos
         db_token = db.query(RefreshToken).filter(
             RefreshToken.token == refresh_token,
             RefreshToken.activo == True,
@@ -475,7 +559,6 @@ class AuthService:
                 detail="Refresh token inválido o expirado"
             )
         
-        # Decodificar token
         try:
             payload = JWTUtils.decode_token(refresh_token)
             if payload.get("type") != "refresh":
@@ -484,12 +567,10 @@ class AuthService:
                     detail="Tipo de token inválido"
                 )
         except HTTPException:
-            # Marcar token como inactivo
             db_token.activo = False
             db.commit()
             raise
         
-        # Obtener usuario
         user = db.query(Usuario).filter(Usuario.id == payload.get("user_id")).first()
         if not user or not user.activo:
             db_token.activo = False
@@ -499,7 +580,6 @@ class AuthService:
                 detail="Usuario no válido"
             )
         
-        # Crear nuevo access token
         new_access_token = JWTUtils.create_access_token(
             data={"sub": user.email, "user_id": user.id, "role": user.rol.value}
         )
@@ -584,13 +664,14 @@ def require_role(allowed_roles: List[TipoRol]):
 app = FastAPI(
     title="MediCitas API con Autenticación",
     description="Especialistas para ti, cuando lo necesitas.",
-    version="2.0.0"
+    version="2.1.0"
 )
 
-# Rutas de autenticación
-@app.post("/auth/registro", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED)
-def registrar_usuario(user_data: UsuarioRegistro, db: Session = Depends(get_db)):
-    """Registrar nuevo usuario"""
+# --- INICIO: Rutas de Autenticación y Registro ---
+
+@app.post("/auth/registro/paciente", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED, tags=["Autenticación"])
+def registrar_paciente(user_data: UsuarioRegistro, db: Session = Depends(get_db)):
+    """Registrar un nuevo usuario con el rol de Paciente."""
     try:
         user = AuthService.create_user(db, user_data)
         return user
@@ -602,7 +683,37 @@ def registrar_usuario(user_data: UsuarioRegistro, db: Session = Depends(get_db))
             detail=f"Error interno del servidor: {str(e)}"
         )
 
-@app.post("/auth/login", response_model=Token)
+@app.post("/auth/registro/doctor", status_code=status.HTTP_201_CREATED, tags=["Autenticación"])
+def registrar_doctor(doctor_data: DoctorRegistro, db: Session = Depends(get_db)):
+    """Registrar un nuevo usuario Doctor, incluyendo su perfil y especialidades."""
+    try:
+        doctor = AuthService.create_doctor(db, doctor_data)
+        
+        # Construir la respuesta manualmente para asegurar que todo se cargue
+        especialidades_resp = [EspecialidadResponse.model_validate(de.especialidad) for de in doctor.perfil_doctor.especialidades]
+        
+        perfil_resp = PerfilDoctorResponse.model_validate(doctor.perfil_doctor)
+
+        # Crear un diccionario con los datos del doctor excluyendo perfil_doctor
+        doctor_dict = {k: v for k, v in doctor.__dict__.items() if k != 'perfil_doctor'}
+        
+        # Usar el modelo de respuesta DoctorResponse
+        return DoctorResponse(
+            **doctor_dict,
+            perfil_doctor=perfil_resp,
+            especialidades=especialidades_resp
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error interno del servidor al registrar doctor: {str(e)}"
+        )
+
+
+@app.post("/auth/login", response_model=Token, tags=["Autenticación"])
 def iniciar_sesion(user_credentials: UsuarioLogin, db: Session = Depends(get_db)):
     """Iniciar sesión de usuario"""
     user = AuthService.authenticate_user(db, user_credentials.email, user_credentials.password)
@@ -615,12 +726,12 @@ def iniciar_sesion(user_credentials: UsuarioLogin, db: Session = Depends(get_db)
     
     return AuthService.create_tokens(db, user)
 
-@app.post("/auth/refresh", response_model=Token)
+@app.post("/auth/refresh", response_model=Token, tags=["Autenticación"])
 def refrescar_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
     """Refrescar token de acceso"""
     return AuthService.refresh_access_token(db, token_data.refresh_token)
 
-@app.post("/auth/logout")
+@app.post("/auth/logout", tags=["Autenticación"])
 def cerrar_sesion(token_data: TokenRefresh, db: Session = Depends(get_db)):
     """Cerrar sesión de usuario"""
     success = AuthService.logout_user(db, token_data.refresh_token)
@@ -632,31 +743,28 @@ def cerrar_sesion(token_data: TokenRefresh, db: Session = Depends(get_db)):
             detail="Token de refresco inválido"
         )
 
-@app.get("/auth/me", response_model=UsuarioResponse)
+@app.get("/auth/me", response_model=UsuarioResponse, tags=["Autenticación"])
 def obtener_usuario_actual(current_user: Usuario = Depends(get_current_active_user)):
     """Obtener información del usuario actual"""
     return current_user
 
-@app.get("/auth/profile", response_model=UsuarioResponse)
-def obtener_perfil_usuario(current_user: Usuario = Depends(get_current_active_user)):
-    """Obtener perfil completo del usuario actual"""
-    return current_user
+# --- FIN: Rutas de Autenticación y Registro ---
+
 
 # Rutas públicas (sin autenticación)
-@app.get("/")
+@app.get("/", tags=["General"])
 def root():
     return {
         "message": "Bienvenido a MediCitas API",
         "slogan": "Especialistas para ti, cuando lo necesitas.",
-        "version": "2.0.0",
+        "version": "2.1.0",
         "auth_enabled": True
     }
 
-@app.get("/health")
+@app.get("/health", tags=["General"])
 def health_check(db: Session = Depends(get_db)):
     """Verificar la conexión a la base de datos"""
     try:
-        # Usar text() para ejecutar una consulta SQL literal
         from sqlalchemy import text
         db.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}
@@ -664,14 +772,14 @@ def health_check(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Database connection failed: {e}")
 
 
-@app.get("/especialidades/")
+@app.get("/especialidades/", tags=["General"])
 def obtener_especialidades_publicas(db: Session = Depends(get_db)):
     """Obtener lista de especialidades (público)"""
     especialidades = db.query(Especialidad).all()
     return especialidades
 
 # Rutas protegidas (requieren autenticación)
-@app.get("/usuarios/", response_model=List[UsuarioResponse])
+@app.get("/usuarios/", response_model=List[UsuarioResponse], tags=["Administración"])
 def obtener_usuarios(
     skip: int = 0, 
     limit: int = 100, 
@@ -682,7 +790,7 @@ def obtener_usuarios(
     usuarios = db.query(Usuario).offset(skip).limit(limit).all()
     return usuarios
 
-@app.get("/stats")
+@app.get("/stats", tags=["Administración"])
 def obtener_estadisticas(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(require_role([TipoRol.ADMINISTRADOR]))
@@ -696,26 +804,17 @@ def obtener_estadisticas(
             "administradores": db.query(Usuario).filter(Usuario.rol == TipoRol.ADMINISTRADOR).count(),
             "especialidades": db.query(Especialidad).count(),
             "citas_total": db.query(Cita).count(),
-            "citas_programadas": db.query(Cita).filter(Cita.estado == EstadoCita.PROGRAMADA).count(),
-            "citas_confirmadas": db.query(Cita).filter(Cita.estado == EstadoCita.CONFIRMADA).count(),
-            "citas_completadas": db.query(Cita).filter(Cita.estado == EstadoCita.COMPLETADA).count(),
             "resenas_total": db.query(Resena).count(),
-            "notificaciones_total": db.query(Notificacion).count(),
-            "tokens_activos": db.query(RefreshToken).filter(
-                RefreshToken.activo == True,
-                RefreshToken.fecha_expiracion > datetime.utcnow()
-            ).count()
         }
         return stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener estadísticas: {str(e)}")
 
-@app.get("/doctores/")
+@app.get("/doctores/", tags=["Doctores"])
 def obtener_doctores(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
+    db: Session = Depends(get_db)
 ):
-    """Obtener lista de doctores (usuarios autenticados)"""
+    """Obtener lista de doctores (pública)"""
     doctores = db.query(PerfilDoctor).all()
     resultado = []
     
@@ -734,7 +833,7 @@ def obtener_doctores(
     
     return resultado
 
-@app.get("/mis-citas/")
+@app.get("/mis-citas/", response_model=List[CitaResponse], tags=["Citas"])
 def obtener_mis_citas(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_active_user)
@@ -753,8 +852,7 @@ def obtener_mis_citas(
     
     return citas
 
-# --- INICIO: Nueva ruta para crear citas ---
-@app.post("/citas/", response_model=CitaResponse, status_code=status.HTTP_201_CREATED)
+@app.post("/citas/", response_model=CitaResponse, status_code=status.HTTP_201_CREATED, tags=["Citas"])
 def crear_cita(
     cita_data: CitaCrear,
     db: Session = Depends(get_db),
@@ -763,16 +861,13 @@ def crear_cita(
     """
     Crear una nueva cita.
     - Un PACIENTE puede crear una cita para sí mismo.
-    - Un ADMINISTRADOR también puede crear citas, pero esta implementación asume que el paciente es el usuario logueado.
     """
-    # Solo los pacientes pueden crear citas para sí mismos
     if current_user.rol != TipoRol.PACIENTE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Solo los pacientes pueden crear nuevas citas."
         )
 
-    # 1. Verificar que el doctor existe y está activo
     doctor_perfil = db.query(PerfilDoctor).join(Usuario).filter(
         PerfilDoctor.id == cita_data.doctor_id,
         Usuario.activo == True
@@ -780,12 +875,10 @@ def crear_cita(
     if not doctor_perfil:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor no encontrado o inactivo.")
 
-    # 2. Verificar que la especialidad existe
     especialidad = db.query(Especialidad).filter(Especialidad.id == cita_data.especialidad_id).first()
     if not especialidad:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Especialidad no encontrada.")
 
-    # 3. Verificar que el doctor tiene la especialidad indicada
     doctor_especialidad = db.query(DoctorEspecialidad).filter(
         DoctorEspecialidad.doctor_id == cita_data.doctor_id,
         DoctorEspecialidad.especialidad_id == cita_data.especialidad_id
@@ -793,7 +886,6 @@ def crear_cita(
     if not doctor_especialidad:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El doctor seleccionado no ofrece la especialidad indicada.")
 
-    # 4. Verificar conflictos de horario para el doctor
     cita_existente = db.query(Cita).filter(
         Cita.doctor_id == cita_data.doctor_id,
         Cita.fecha_hora == cita_data.fecha_hora
@@ -801,14 +893,9 @@ def crear_cita(
     if cita_existente:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El doctor ya tiene una cita programada en este horario.")
 
-    # Crear la nueva cita
     nueva_cita = Cita(
         paciente_id=current_user.id,
-        doctor_id=cita_data.doctor_id,
-        especialidad_id=cita_data.especialidad_id,
-        fecha_hora=cita_data.fecha_hora,
-        motivo_consulta=cita_data.motivo_consulta,
-        duracion_minutos=cita_data.duracion_minutos,
+        **cita_data.model_dump(),
         estado=EstadoCita.PROGRAMADA
     )
 
@@ -817,7 +904,6 @@ def crear_cita(
     db.refresh(nueva_cita)
 
     return nueva_cita
-# --- FIN: Nueva ruta para crear citas ---
 
 
 # Middleware de manejo de errores
