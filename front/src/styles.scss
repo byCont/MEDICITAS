@@ -1,0 +1,246 @@
+/* You can add global styles to this file, and also import other style files */
+
+/* Material Design Icons */
+@import url('https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css');
+
+/* Custom global styles */
+
+/* EA Sports Cruyff Sans Font Faces */
+@font-face {
+  font-family: 'Cruyff Sans';
+  src: url('./assets/fonts/ea-sports-cruyff-sans/CruyffSans-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cruyff Sans';
+  src: url('./assets/fonts/ea-sports-cruyff-sans/CruyffSans-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cruyff Sans';
+  src: url('./assets/fonts/ea-sports-cruyff-sans/CruyffSans-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cruyff Sans';
+  src: url('./assets/fonts/ea-sports-cruyff-sans/CruyffSans-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --background: linear-gradient(0deg,#eeeded 50%, rgb(224, 235, 252) 100%);
+  --bg-solid: rgb(220, 228, 241);
+  --on-accent: rgb(114, 136, 196);
+  --bs-primary: rgba(156,56,56,255);
+  --bs-primary-b: rgba(0, 132, 255, 0.16);
+  --gradient-bg-start: rgba(252, 224, 224, 0.8);
+  --gradient-bg-end: #eeeded;
+  --info: rgba(0, 140, 255, 0.3);
+  --text-primary: rgba(0, 0, 0, 0.8);
+  --text-secondary: rgb(94, 114, 180);
+  --text-tertiary: rgba(0, 0, 0, 0.5);
+  --border-level-1: rgba(121, 26, 46, 0.05);
+  --border-level-2: rgba(87, 132, 255, 0.16);
+  --border-level-3: rgba(26, 67, 121, 0.2);
+  --surface-level-1: rgba(87, 104, 255, 0.04);
+  --surface-level-2: rgba(139, 7, 35, 0.08);
+  --surface-level-3: rgba(87, 160, 255, 0.16);
+  --surface-level-4: rgba(87, 160, 255, 0.32);
+  // --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --border: 8px solid rgba(0, 68, 255, 0.05);
+}
+/* Estilos para el tema oscuro */
+.dark-theme {
+  --background: linear-gradient(0deg,rgb(31, 31, 34) 52%, rgb(33, 38, 59) 100%);
+  --bg-solid: rgb(28, 28, 31);
+  --on-accent: rgb(67, 77, 109);
+  --bs-primary: rgba(156,56,56,255);
+  --bs-primary-b: rgba(0, 26, 255, 0.24);
+  --gradient-bg-start: rgba(35, 46, 75, 0.7);
+  --gradient-bg-end: rgb(28, 28, 31);
+  --info: rgba(0, 63, 131, 0.5);
+  --text-primary: rgb(230, 227, 227);
+  --text-secondary: rgb(170, 183, 255);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --border-level-1: rgba(26, 36, 121, 0.1);
+  --border-level-2: rgba(88, 141, 255, 0.16);
+  --border-level-3: rgba(88, 113, 255, 0.1);
+  --surface-level-1: rgba(88, 141, 255, 0.04);
+  --surface-level-2: rgba(88, 155, 255, 0.08);
+  --surface-level-3: rgba(88, 146, 255, 0.16);
+  --surface-level-4: rgba(88, 119, 255, 0.32);
+  // --box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+  --border: 8px solid rgba(0, 17, 255, 0.05);
+}
+/* General styles */
+body {
+  font-family: 'Cruyff Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+h1, h2, h3, h4, h5, h6, p, a {
+  color: var(--text-primary);
+}
+
+.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+.navbar-brand {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.card {
+  transition: transform 0.5s ease, box-shadow 0.5s ease, background-color 0.5s ease;
+  cursor: pointer;
+  background: var(--surface-level-1);
+  border: 8px solid transparent;
+  border-radius: 1rem;
+
+  &:hover {
+    box-shadow: var(--box-shadow);
+    background: var(--surface-level-2);
+    transform: scale(1.02);
+    border: var(--border);
+    border-radius: 1rem;
+  }
+}
+
+.btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+  --bs-btn-active-bg: var(--bs-primary);
+  --bs-btn-active-border-color: var(--bs-primary);
+  --bs-btn-disabled-bg: var(--bs-primary);
+  --bs-btn-disabled-border-color: var(--bs-primary);
+  &:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+  }
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--bs-primary);
+  --bs-btn-border-color: var(--bs-primary);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: var(--bs-primary);
+  --bs-btn-hover-border-color: var(--bs-primary);
+  --bs-btn-focus-shadow-rgb: var(--bs-primary);
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: var(--bs-primary);
+  --bs-btn-active-border-color: var(--bs-primary);
+  --bs-btn-active-shadow: inset 0 3px 5px var(--surface-level-3);
+  --bs-btn-disabled-color: var(--bs-primary);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--bs-primary);
+  --bs-gradient: none;
+}
+
+.btn-outline-secondary {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary);
+  --bs-btn-active-bg: var(--bs-primary-b);
+
+  &:hover {
+    background-color: var(--gradient-bg-start);
+    color: var(--text-primary);
+    border-color: transparent;
+  }
+}
+.text-primary {
+  color: var(--text-primary) !important;
+}
+.bg-primary {
+  background-color: var(--bs-primary) !important;
+}
+.bg-solid {
+  background-color: var(--bg-solid) !important;
+}
+.bg-background {
+  background-color: var(--background) !important;
+}
+
+label{
+  color: var(--text-primary);
+}
+
+/* Utility classes for Material Design Icons */
+.mdi {
+  font-size: 1.2em;
+  vertical-align: middle;
+}
+
+.mdi-lg {
+  font-size: 1.5em;
+}
+
+.mdi-xl {
+  font-size: 2em;
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Form styles */
+.form-control:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem var(--surface-level-3);
+}
+
+/* Alert styles */
+.alert {
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--surface-level-2);
+  color: var(--text-primary);
+}
+
+/* Custom spacing */
+.mt-6 {
+  margin-top: 3.5rem;
+}
+
+.mb-6 {
+  margin-bottom: 3.5rem;
+}
+
+.py-6 {
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
+}
+
+.input {
+  background-color: var(--gradient-bg-end);
+  border: 1px solid var(--border-level-2);
+  color: var(--text-primary);
+  &::placeholder {
+    color: var(--text-tertiary);
+    opacity: 1; // Firefox adds a lower opacity by default
+  }
+  &:focus {
+    background-color: var(--gradient-bg-end);
+    color: var(--text-primary);
+  }
+}
+
+.form-select {
+  background-color: var(--gradient-bg-end);
+  color: var(--text-primary); 
+} 
