@@ -8,6 +8,7 @@ Implementa registro, login, logout y protección de rutas con JWT
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, Date, SmallInteger, BigInteger, ForeignKey, Enum as SQLEnum, CheckConstraint, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
@@ -665,6 +666,15 @@ app = FastAPI(
     title="MediCitas API con Autenticación",
     description="Especialistas para ti, cuando lo necesitas.",
     version="2.1.0"
+)
+
+# Configuración de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Origen de tu frontend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # --- INICIO: Rutas de Autenticación y Registro ---

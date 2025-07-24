@@ -42,10 +42,10 @@
   --background: linear-gradient(0deg,#eeeded 50%, rgb(224, 235, 252) 100%);
   --bg-solid: rgb(220, 228, 241);
   --on-accent: rgb(114, 136, 196);
-  --bs-primary: rgba(156,56,56,255);
-  --bs-primary-b: rgba(0, 132, 255, 0.16);
-  --gradient-bg-start: rgba(252, 224, 224, 0.8);
-  --gradient-bg-end: #eeeded;
+  --bs-primary: rgb(32, 70, 126);
+  --bs-primary-b: rgba(0, 119, 255, 0.7);
+  --gradient-bg-start: rgba(224, 233, 252, 0.8);
+  --gradient-bg-end: #ededee;
   --info: rgba(0, 140, 255, 0.3);
   --text-primary: rgba(0, 0, 0, 0.8);
   --text-secondary: rgb(94, 114, 180);
@@ -54,7 +54,7 @@
   --border-level-2: rgba(87, 132, 255, 0.16);
   --border-level-3: rgba(26, 67, 121, 0.2);
   --surface-level-1: rgba(87, 104, 255, 0.04);
-  --surface-level-2: rgba(139, 7, 35, 0.08);
+  --surface-level-2: rgba(7, 91, 139, 0.08);
   --surface-level-3: rgba(87, 160, 255, 0.16);
   --surface-level-4: rgba(87, 160, 255, 0.32);
   // --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -65,8 +65,8 @@
   --background: linear-gradient(0deg,rgb(31, 31, 34) 52%, rgb(33, 38, 59) 100%);
   --bg-solid: rgb(28, 28, 31);
   --on-accent: rgb(67, 77, 109);
-  --bs-primary: rgba(156,56,56,255);
-  --bs-primary-b: rgba(0, 26, 255, 0.24);
+  --bs-primary: rgb(32, 70, 126);
+  --bs-primary-b: rgba(0, 119, 255, 0.7);
   --gradient-bg-start: rgba(35, 46, 75, 0.7);
   --gradient-bg-end: rgb(28, 28, 31);
   --info: rgba(0, 63, 131, 0.5);
@@ -98,10 +98,20 @@ h1, h2, h3, h4, h5, h6, p, a {
   color: var(--text-secondary) !important;
 }
 
-.navbar-brand {
-  font-weight: bold;
-  font-size: 1.5rem;
-  color: var(--text-secondary);
+.navbar {
+  .navbar-brand, .nav-link {
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: var(--text-secondary);
+    }
+  }
+  
+  .navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+  }
 }
 
 .card {
@@ -114,7 +124,7 @@ h1, h2, h3, h4, h5, h6, p, a {
   &:hover {
     box-shadow: var(--box-shadow);
     background: var(--surface-level-2);
-    transform: scale(1.02);
+    transform: scale(1.01);
     border: var(--border);
     border-radius: 1rem;
   }

@@ -174,37 +174,37 @@ def crear_semillas_completas(db: Session):
             usuario_id=8,  # Dr. Carlos Eduardo Mendoza Rivera
             cedula_profesional="12345678",
             biografia="Especialista en Cardiología con 15 años de experiencia. Graduado de la Universidad Nacional de Colombia. Especialista en cirugía cardiovascular y medicina preventiva.",
-            foto_perfil_url="https://example.com/fotos/carlos-mendoza.jpg"
+            foto_perfil_url="https://i.pravatar.cc/150?u=dra.ana"
         ),
         PerfilDoctor(
             usuario_id=9,  # Dra. Ana María Rodríguez Castillo
             cedula_profesional="87654321",
             biografia="Especialista en Dermatología y Neurología. Más de 12 años de experiencia en el tratamiento de enfermedades de la piel y trastornos neurológicos.",
-            foto_perfil_url="https://example.com/fotos/ana-rodriguez.jpg"
+            foto_perfil_url="https://i.pravatar.cc/150?u=dr.ana"
         ),
         PerfilDoctor(
             usuario_id=10,  # Dr. Miguel Ángel Ramírez Delgado
             cedula_profesional="11223344",
             biografia="Especialista en Pediatría con enfoque en desarrollo infantil. 20 años de experiencia atendiendo niños y adolescentes.",
-            foto_perfil_url="https://example.com/fotos/miguel-ramirez.jpg"
+            foto_perfil_url="https://i.pravatar.cc/150?u=drmiguel-ramirez"
         ),
         PerfilDoctor(
             usuario_id=11,  # Dra. Laura Patricia Jiménez Morales
             cedula_profesional="55667788",
             biografia="Especialista en Ginecología y Obstetricia. Dedicada al cuidado integral de la salud femenina con 10 años de experiencia.",
-            foto_perfil_url="https://example.com/fotos/laura-jimenez.jpg"
+            foto_perfil_url="https://i.pravatar.cc/150?u=dra.laura-jimenez"
         ),
         PerfilDoctor(
             usuario_id=12,  # Dr. Fernando José Guerrero Ospina
             cedula_profesional="99887766",
             biografia="Especialista en Traumatología y Ortopedia. Experto en cirugía de columna y articulaciones con 18 años de experiencia.",
-            foto_perfil_url="https://example.com/fotos/fernando-guerrero.jpg"
+            foto_perfil_url="https://i.pravatar.cc/150?u=drfernando-guerrero"
         ),
         PerfilDoctor(
             usuario_id=13,  # Dra. Patricia Elena Vásquez Cruz
             cedula_profesional="33445566",
             biografia="Especialista en Oftalmología y Psiquiatría. Enfoque integral en salud mental y visual con 14 años de experiencia.",
-            foto_perfil_url="https://example.com/fotos/patricia-vasquez.jpg"
+            foto_perfil_url="https://i.pravatar.cc/150?u=drapatricia-vasquez"
         ),
     ]
     
