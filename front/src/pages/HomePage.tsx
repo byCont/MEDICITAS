@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { specialtyService, doctorService, Doctor, Especialidad } from '../services/api';
+import './pages.scss';
 
 const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,72 +59,111 @@ const HomePage: React.FC = () => {
   return (
     <div className="container mt-4">
       {/* Hero Section */}
-      <div className="row mb-5">
-        <div className="col-12 text-center">
-          <h1 className="display-4 fw-bold mb-4">
-            Especialistas para ti, <span className="text-primary">cuando lo necesitas</span>
-          </h1>
-          <p className="lead mb-4">
-            Encuentra y reserva citas con los mejores profesionales de la salud 
-            de manera fácil y rápida.
-          </p>
+      <div className="row mb-5 position-relative">
+        <div className="col-12 text-center position-relative" style={{
+          backgroundImage: 'url(/src/assets/images/home-dra.png)',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right center',
+          backgroundSize: 'contain',
+          minHeight: '300px',
+          padding: '2rem 0',
+          zIndex: 1
+        }}>
+          <div className="position-relative">
+            <h1 className="display-4 fw-bold mb-4 mt-6" style={{textShadow: '0 0 5px var(--bs-primary-b)'}}>
+              Encuentra la cita<br/>de tu vida
+            </h1>
+            
+            {/* Barra de búsqueda */}
+            <form onSubmit={handleSearch} className="row g-2 justify-content-center mb-4">
+              <div className="col-md-8">
+                <div className="subject-search">
+                  <div className="p-0">
+                    <div className="input-group input-group-lg">
+                      <span className="input-group-text bg-transparent border-0">
+                        <i className="mdi mdi-magnify"></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control border-0 shadow-none"
+                        placeholder="¿De qué necesitas la cita?"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                      />
+                      <button 
+                        className="btn btn-primary px-4" 
+                        type="submit" 
+                        disabled={isSearching}
+                      >
+                        {isSearching ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                            Buscando...
+                          </>
+                        ) : (
+                          'Buscar'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
 
-          {/* Barra de búsqueda */}
-          <form onSubmit={handleSearch} className="row g-2 justify-content-center mb-4">
-            <div className="col-md-6">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="mdi mdi-magnify"></i>
-                </span>
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  placeholder="Buscar por especialidad (ej: Cardiología, Dermatología...)"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <button 
-                  className="btn btn-primary btn-lg" 
-                  type="submit" 
-                  disabled={isSearching}
+            {/* Filtros rápidos por especialidad */}
+            <div className="row g-4 justify-content-center">
+              <div className="col-auto">
+                <Link
+                  className="btn btn-sm btn-outline-primary rounded-pill"
+                  to="/especialidades"
                 >
-                  {isSearching ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                      Buscando...
-                    </>
-                  ) : (
-                    'Buscar'
-                  )}
-                </button>
+                  Todas
+                </Link>
               </div>
+              {specialties.slice(0, 8).map((specialty) => (
+                <div key={specialty.id} className="col-auto">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-primary rounded-pill"
+                    onClick={() => handleSpecialtyClick(specialty.nombre)}
+                  >
+                    {specialty.nombre}
+                  </button>
+                </div>
+              ))}
             </div>
-          </form>
 
-          {/* Estadísticas */}
-          <div className="row g-4 mb-5">
-            <div className="col-md-4">
-              <div className="text-center">
-                <i className="mdi mdi-doctor mdi-xl text-primary mb-2"></i>
-                <h3 className="fw-bold">500+</h3>
-                <p className="text-muted">Doctores Especialistas</p>
+            {/* Estadísticas */}
+            <div className="row g-2 mb-4 justify-content-end">
+              <div className="col-auto">
+                <div className=" rounded-4 bg-white border-0 shadow-sm">
+                  <div className="card-body text-center p-2">
+                    <i className="mdi mdi-doctor mdi-1x text-dark mb-1"></i>
+                    <h4 className="fw-bold mb-0 text-dark">+500</h4>
+                    <small className="text-dark">Especialistas</small>
+                  </div>
+                </div>
+              </div>
+              <div className="col-auto">
+                <div className=" rounded-4 bg-white border-0 shadow-sm">
+                  <div className="card-body text-center p-2">
+                    <i className="mdi mdi-heart-pulse mdi-1x text-dark mb-1"></i>
+                    <h4 className="fw-bold mb-0 text-dark">+50</h4>
+                    <small className="text-dark">Especialidades</small>
+                  </div>
+                </div>
+              </div>
+              <div className="col-auto">
+                <div className=" rounded-4 bg-white border-0 shadow-sm">
+                  <div className="card-body text-center p-2">
+                    <i className="mdi mdi-clock mdi-1x text-dark mb-1"></i>
+                    <h4 className="fw-bold mb-0 text-dark">24/7</h4>
+                    <small className="text-dark">Disponibilidad</small>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="col-md-4">
-              <div className="text-center">
-                <i className="mdi mdi-heart-pulse mdi-xl text-primary mb-2"></i>
-                <h3 className="fw-bold">50+</h3>
-                <p className="text-muted">Especialidades Médicas</p>
-              </div>
-            </div>
-            <div className="col-md-4">
-              <div className="text-center">
-                <i className="mdi mdi-clock mdi-xl text-primary mb-2"></i>
-                <h3 className="fw-bold">24/7</h3>
-                <p className="text-muted">Disponibilidad</p>
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
 
@@ -132,7 +172,7 @@ const HomePage: React.FC = () => {
         <div className="row mb-5">
           <div className="col-12">
             <h2 className="mb-4">
-              Resultados de búsqueda para "{searchTerm}"
+              Especialistas recomendados para "{searchTerm}"
             </h2>
             <div className="row g-4">
               {searchResults.map((doctor) => (
@@ -140,11 +180,17 @@ const HomePage: React.FC = () => {
                   <div className="card h-100">
                     <div className="card-body">
                       <div className="d-flex align-items-center mb-3">
-                        <div className="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                          <i className="mdi mdi-doctor text-primary mdi-lg"></i>
-                        </div>
+                        {doctor.foto_perfil_url && (
+                          <img
+                            src={doctor.foto_perfil_url}
+                            alt={doctor.nombre_completo}
+                            className="rounded-circle img-fluid me-1"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                            loading="lazy"
+                          />
+                        )}
                         <div>
-                          <h5 className="card-title mb-1">{doctor.nombre_completo}</h5>
+                          <h5 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h5>
                           <small className="text-muted">Cédula: {doctor.cedula_profesional}</small>
                         </div>
                       </div>
@@ -264,6 +310,7 @@ const HomePage: React.FC = () => {
               <Link to="/registro-doctor" className="btn btn-light btn-lg">
                 Registrarse como Doctor
               </Link>
+              </div>
             </div>
           </div>
         </div>

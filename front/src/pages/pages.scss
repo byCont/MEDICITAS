@@ -1,0 +1,67 @@
+.subject-search .btn{
+  height: 60px;
+}
+.subject-search {
+  position: relative;
+  overflow: hidden;
+  border: 12px solid transparent;
+  z-index: 1;
+  background: var(--surface-level-1); // Remove card background to allow pseudo-elements to be visible
+  height: 80px;
+  border-radius: 50rem;
+
+  &::before {
+    content: "";
+    z-index: -2; // Glow behind the ::after element
+    position: absolute;
+    top: 50%;
+    left: 43%;
+    aspect-ratio: 1/1;
+    transform: translate(-50%, -50%);
+    width: 87%;    
+    background: conic-gradient(transparent 270deg, var(--bs-primary), transparent);
+    animation: rotateGlow var(--glow-speed, 4s) linear infinite;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
+    background-color: var(--bg-solid);
+    border-radius: 50rem; // Match .rounded-pill
+  }
+
+  .card-body {
+    position: relative;
+    z-index: 2;
+    background: transparent;
+  }
+
+  .form-control {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-tertiary);
+      opacity: 1; // Firefox adds a lower opacity by default
+    }
+  }
+}
+
+@keyframes rotateGlow {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.sh {
+  text-shadow: 0 0 5px white;
+}
