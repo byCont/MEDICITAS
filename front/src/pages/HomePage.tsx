@@ -60,16 +60,8 @@ const HomePage: React.FC = () => {
     <div className="container mt-4">
       {/* Hero Section */}
       <div className="row mb-5 position-relative">
-        <div className="col-12 text-center position-relative" style={{
-          backgroundImage: 'url(/src/assets/images/home-dra.png)',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right center',
-          backgroundSize: 'contain',
-          minHeight: '300px',
-          padding: '2rem 0',
-          zIndex: 1
-        }}>
-          <div className="position-relative">
+        <div className="col-12 text-center position-relative hero-section">
+          <div className="container position-relative">
             <h1 className="display-4 fw-bold mb-4 mt-6" style={{textShadow: '0 0 5px var(--bs-primary-b)'}}>
               Encuentra la cita<br/>de tu vida
             </h1>
@@ -111,7 +103,7 @@ const HomePage: React.FC = () => {
             </form>
 
             {/* Filtros rápidos por especialidad */}
-            <div className="row g-4 justify-content-center">
+            <div className="row g-2 justify-content-center">
               <div className="col-auto">
                 <Link
                   className="btn btn-sm btn-outline-primary rounded-pill"
