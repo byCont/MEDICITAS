@@ -128,7 +128,7 @@ const RegisterDoctorPage: React.FC = () => {
       <div className="container mt-5">
         <div className="row justify-content-center">
           <div className="col-md-6">
-            <div className="card">
+            <div className="card border-0">
               <div className="card-body text-center">
                 <i className="mdi mdi-check-circle mdi-xl text-success mb-3"></i>
                 <h3 className="text-success">¡Registro de Doctor Exitoso!</h3>
@@ -149,8 +149,8 @@ const RegisterDoctorPage: React.FC = () => {
   return (
     <div className="container mt-5">
       <div className="row justify-content-center">
-        <div className="col-md-10 col-lg-8">
-          <div className="card">
+        <div className="col-md-10 col-lg-8 ">
+          <div className="card border-0 mb-5">
             <div className="card-body">
               <div className="text-center mb-4">
                 <i className="mdi mdi-stethoscope mdi-xl text-primary mb-3"></i>
@@ -314,7 +314,7 @@ const RegisterDoctorPage: React.FC = () => {
                       Biografía Profesional
                     </label>
                     <textarea
-                      className="form-control"
+                      className="form-control rounded-4"
                       id="biografia"
                       name="biografia"
                       rows={4}

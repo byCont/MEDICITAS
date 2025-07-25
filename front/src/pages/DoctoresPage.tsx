@@ -80,9 +80,9 @@ const DoctoresPage: React.FC = () => {
             <i className="mdi mdi-doctor text-primary me-3"></i>
             Nuestros Doctores
           </h1>
-          <p className="text-center text-muted lead">
+          <h5 className="text-center text-muted">
             Encuentra al especialista que necesitas entre nuestros {doctors.length} profesionales
-          </p>
+          </h5>
         </div>
       </div>
 
@@ -90,8 +90,8 @@ const DoctoresPage: React.FC = () => {
       <div className="row mb-4">
         <div className="col-md-8">
           <div className="input-group">
-            <span className="input-group-text">
-              <i className="mdi mdi-magnify"></i>
+            <span className="input-group-text rounded-start-pill border-0">
+              <i className="mdi mdi-magnify "></i>
             </span>
             <input
               type="text"
@@ -102,7 +102,7 @@ const DoctoresPage: React.FC = () => {
             />
           </div>
         </div>
-        <div className="col-md-4">
+        <div className="col-md-3 m-auto">
           <select
             className="form-select"
             value={selectedSpecialty}
@@ -249,11 +249,11 @@ const DoctoresPage: React.FC = () => {
       )}
 
       {/* Call to Action */}
-      <div className="row mt-5">
+      <div className="row m-5">
         <div className="col-12">
-          <div className="card bg-light">
+          <div className="card border-0">
             <div className="card-body text-center py-4">
-              <h4 className="card-title">¿No encuentras lo que buscas?</h4>
+              <h4 className="card-title text-primary">¿No encuentras lo que buscas?</h4>
               <p className="card-text text-muted">
                 Contáctanos y te ayudaremos a encontrar el especialista adecuado para ti
               </p>

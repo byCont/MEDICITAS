@@ -21,7 +21,7 @@ const Navbar: React.FC = () => {
   `;
 
   // Clases comunes para los elementos de la barra de navegación para no repetirlas.
-  const navElementClasses = "backdrop-blur bg-dark bg-opacity-50 rounded-pill px-3 py-2 m-1 text-white text-decoration-none d-inline-flex align-items-center";
+  const navElementClasses = "backdrop-blur bg-light bg-opacity-25 rounded-pill px-3 py-2 m-1 text-primary text-decoration-none d-inline-flex align-items-center";
 
   return (
     <>

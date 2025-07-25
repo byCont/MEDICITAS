@@ -98,7 +98,7 @@ const RegisterPage: React.FC = () => {
     <div className="container mt-5">
       <div className="row justify-content-center">
         <div className="col-md-8 col-lg-6">
-          <div className="card">
+          <div className="card border-0 mb-5">
             <div className="card-body">
               <div className="text-center mb-4">
                 <i className="mdi mdi-account-plus mdi-xl text-primary mb-3"></i>

@@ -103,29 +103,29 @@ const MisCitasPage: React.FC = () => {
       {/* Estadísticas rápidas */}
       <div className="row mb-4">
         <div className="col-md-4">
-          <div className="card bg-primary text-white">
+          <div className="card bg-primary bg-opacity-25 border-0">
             <div className="card-body text-center">
-              <i className="mdi mdi-calendar-check mdi-lg mb-2"></i>
-              <h4>{citasProgramadas.length}</h4>
-              <p className="mb-0">Citas Próximas</p>
+              <i className="mdi mdi-calendar-check mdi-lg mb-2 text-primary"></i>
+              <h4 className="text-primary">{citasProgramadas.length}</h4>
+              <p className="mb-0 text-primary">Citas Próximas</p>
             </div>
           </div>
         </div>
         <div className="col-md-4">
-          <div className="card bg-success text-white">
+          <div className="card bg-success bg-opacity-75 border-0">
             <div className="card-body text-center">
-              <i className="mdi mdi-calendar-check mdi-lg mb-2"></i>
-              <h4>{citas.filter(c => c.estado === 'Completada').length}</h4>
-              <p className="mb-0">Citas Completadas</p>
+              <i className="mdi mdi-calendar-check mdi-lg mb-2 text-primary"></i>
+              <h4 className="text-primary">{citas.filter(c => c.estado === 'Completada').length}</h4>
+              <p className="mb-0 text-primary">Citas Completadas</p>
             </div>
           </div>
         </div>
         <div className="col-md-4">
-          <div className="card bg-info text-white">
+          <div className="card bg-warning bg-opacity-75 border-0">
             <div className="card-body text-center">
-              <i className="mdi mdi-calendar-multiple mdi-lg mb-2"></i>
-              <h4>{citas.length}</h4>
-              <p className="mb-0">Total de Citas</p>
+              <i className="mdi mdi-calendar-multiple mdi-lg mb-2 text-primary"></i>
+              <h4 className="text-primary">{citas.length}</h4>
+              <p className="mb-0 text-primary">Total de Citas</p>
             </div>
           </div>
         </div>
@@ -162,10 +162,10 @@ const MisCitasPage: React.FC = () => {
                 <div className="row g-4">
                   {citasProgramadas.map((cita) => (
                     <div key={cita.id} className="col-md-6 col-lg-4">
-                      <div className="card border-primary">
+                      <div className="card">
                         <div className="card-body">
                           <div className="d-flex justify-content-between align-items-start mb-3">
-                            <h5 className="card-title mb-0">
+                            <h5 className="card-title text-primary mb-0">
                               <i className="mdi mdi-doctor text-primary me-2"></i>
                               Cita #{cita.id}
                             </h5>
@@ -202,7 +202,7 @@ const MisCitasPage: React.FC = () => {
                               <i className="mdi mdi-information me-1"></i>
                               Detalles
                             </button>
-                            <button className="btn btn-outline-danger btn-sm">
+                            <button className="btn btn-outline-danger btn-sm rounded-pill">
                               <i className="mdi mdi-cancel me-1"></i>
                               Cancelar
                             </button>
@@ -230,7 +230,7 @@ const MisCitasPage: React.FC = () => {
                       <div className="card">
                         <div className="card-body">
                           <div className="d-flex justify-content-between align-items-start mb-3">
-                            <h6 className="card-title mb-0">
+                            <h6 className="card-title text-primary mb-0">
                               <i className="mdi mdi-doctor text-muted me-2"></i>
                               Cita #{cita.id}
                             </h6>
@@ -255,7 +255,7 @@ const MisCitasPage: React.FC = () => {
                             </div>
                           )}
 
-                          <button className="btn btn-outline-secondary btn-sm w-100">
+                          <button className="btn btn-outline-primary btn-sm w-100">
                             <i className="mdi mdi-eye me-1"></i>
                             Ver Detalles
                           </button>
@@ -273,7 +273,7 @@ const MisCitasPage: React.FC = () => {
       {/* Call to Action */}
       <div className="row m-5">
         <div className="col-12">
-          <div className="card">
+          <div className="card border-0">
             <div className="card-body text-center py-4">
               <h4 className="card-title text-primary">¿Necesitas agendar una nueva cita?</h4>
               <p className="card-text text-muted">

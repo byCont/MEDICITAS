@@ -4,11 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: 'juan.perez@gmail.com',
+    password: 'password123',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -45,9 +46,9 @@ const LoginPage: React.FC = () => {
 
   return (
     <div className="container mt-5">
-      <div className="row justify-content-center">
+      <div className="row justify-content-center mb-5">
         <div className="col-md-6 col-lg-4">
-          <div className="card">
+          <div className="card border-0">
             <div className="card-body">
               <div className="text-center mb-4">
                 <i className="mdi mdi-heart-pulse mdi-xl text-primary mb-3"></i>
@@ -85,16 +86,25 @@ const LoginPage: React.FC = () => {
                     <i className="mdi mdi-lock me-2"></i>
                     Contraseña
                   </label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    placeholder="Tu contraseña"
-                  />
+                  <div className="input-group">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      className="form-control"
+                      id="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      required
+                      placeholder="Tu contraseña"
+                    />
+                    <button
+                      className="btn btn-sm btn-outline-primary rounded-end-pill bg-solid"
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      <i className={`mdi ${showPassword ? 'mdi-eye-off' : 'mdi-eye'}`}></i>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="d-grid">
@@ -120,14 +130,14 @@ const LoginPage: React.FC = () => {
 
               <hr className="my-4" />
 
-              <div className="text-center">
+              <div className="text-center col-8 mx-auto">
                 <p className="mb-2">¿No tienes una cuenta?</p>
                 <div className="d-grid gap-2">
-                  <Link to="/registro" className="btn btn-outline-primary">
+                  <Link to="/registro" className="btn btn-outline-primary btn-sm">
                     <i className="mdi mdi-account-plus me-2"></i>
                     Registrarse como Paciente
                   </Link>
-                  <Link to="/registro-doctor" className="btn btn-outline-secondary">
+                  <Link to="/registro-doctor" className="btn btn-outline-primary btn-sm">
                     <i className="mdi mdi-stethoscope me-2"></i>
                     Registrarse como Doctor
                   </Link>

@@ -64,9 +64,9 @@ const EspecialidadesPage: React.FC = () => {
             <i className="mdi mdi-medical-bag text-primary me-3"></i>
             Especialidades Médicas
           </h1>
-          <p className="text-center text-muted lead">
+          <h5 className="text-center text-muted">
             Explora nuestras {specialties.length} especialidades médicas disponibles
-          </p>
+          </h5>
         </div>
       </div>
 
@@ -74,7 +74,7 @@ const EspecialidadesPage: React.FC = () => {
       <div className="row mb-4">
         <div className="col-md-8 mx-auto">
           <div className="input-group">
-            <span className="input-group-text">
+            <span className="input-group-text rounded-start-pill border-0">
               <i className="mdi mdi-magnify"></i>
             </span>
             <input
@@ -119,11 +119,11 @@ const EspecialidadesPage: React.FC = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <div className="card-body text-center">
-                  <div className="bg-primary bg-opacity-10 rounded-circle p-4 mx-auto mb-3" style={{ width: 'fit-content' }}>
+                  <div className="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mx-auto mb-3" style={{ width: '80px', height: '80px' }}>
                     <i className="mdi mdi-medical-bag mdi-xl text-primary"></i>
                   </div>
                   
-                  <h5 className="card-title">{specialty.nombre}</h5>
+                  <h5 className="card-title text-primary">{specialty.nombre}</h5>
                   
                   <p className="card-text text-muted">
                     {specialty.descripcion || 'Especialidad médica disponible en nuestra plataforma'}
@@ -145,11 +145,11 @@ const EspecialidadesPage: React.FC = () => {
       {/* Información adicional */}
       <div className="row mt-5">
         <div className="col-12">
-          <div className="card bg-light">
+          <div className="card border-0">
             <div className="card-body">
               <div className="row align-items-center">
                 <div className="col-md-8">
-                  <h4 className="card-title mb-2">
+                  <h4 className="card-title text-primary mb-2">
                     <i className="mdi mdi-information text-primary me-2"></i>
                     ¿Necesitas ayuda para elegir?
                   </h4>
@@ -190,12 +190,12 @@ const EspecialidadesPage: React.FC = () => {
       </div>
 
       {/* Call to Action */}
-      <div className="row mt-5">
+      <div className="row m-5">
         <div className="col-12">
-          <div className="card bg-primary text-white">
+          <div className="card border-0 bg-primary text-white">
             <div className="card-body text-center py-4">
               <h4 className="card-title">¿Eres un especialista?</h4>
-              <p className="card-text">
+              <p className="card-text text-white">
                 Únete a nuestra plataforma y conecta con pacientes que necesitan tu experiencia
               </p>
               <Link to="/registro-doctor" className="btn btn-light">

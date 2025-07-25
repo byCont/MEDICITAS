@@ -53,19 +53,19 @@
   --border-level-1: rgba(121, 26, 46, 0.05);
   --border-level-2: rgba(87, 132, 255, 0.16);
   --border-level-3: rgba(26, 67, 121, 0.2);
-  --surface-level-1: rgba(7, 91, 139, 0.08);
-  --surface-level-2: rgba(7, 91, 139, 0.3);
+  --surface-level-1: rgba(7, 91, 139, 0.2);
+  --surface-level-2: rgba(7, 91, 139, 0.4);
   --surface-level-3: rgba(87, 160, 255, 0.16);
   --surface-level-4: rgba(87, 160, 255, 0.32);
   // --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  --border: 8px solid rgba(0, 68, 255, 0.05);
+  --border: 8px solid rgba(0, 68, 255, 0.25);
 }
 /* Estilos para el tema oscuro */
 .dark-theme {
   --background: linear-gradient(0deg,rgb(12, 19, 27) 52%, rgb(30, 43, 68) 100%);
   --bg-solid: rgb(28, 29, 31);
   --on-accent: rgb(67, 77, 109);
-  --bs-primary: rgb(46, 78, 126);
+  --bs-primary: rgb(73, 124, 201);
   --bs-primary-b: rgba(0, 119, 255, 0.7);
   --gradient-bg-start: rgba(35, 46, 75, 0.7);
   --gradient-bg-end: rgb(28, 28, 31);
@@ -76,12 +76,12 @@
   --border-level-1: rgba(26, 36, 121, 0.1);
   --border-level-2: rgba(88, 141, 255, 0.16);
   --border-level-3: rgba(88, 113, 255, 0.1);
-  --surface-level-1: rgba(7, 91, 139, 0.1);
-  --surface-level-2: rgba(7, 91, 139, 0.2);
+  --surface-level-1: rgba(7, 91, 139, 0.4);
+  --surface-level-2: rgba(7, 91, 139, 0.6);
   --surface-level-3: rgba(88, 146, 255, 0.3);
   --surface-level-4: rgba(88, 119, 255, 0.3);
   // --box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
-  --border: 8px solid rgba(0, 17, 255, 0.05);
+  --border: 8px solid rgba(0, 68, 255, 0.2);
 }
 /* General styles */
 body {
@@ -137,6 +137,7 @@ h1, h2, h3, h4, h5, h6, p, a {
   --bs-btn-active-border-color: var(--bs-primary);
   --bs-btn-disabled-bg: var(--bs-primary);
   --bs-btn-disabled-border-color: var(--bs-primary);
+  border-radius: 50rem;
   &:hover {
     background-color: var(--bs-primary);
     border-color: var(--bs-primary);
@@ -158,6 +159,7 @@ h1, h2, h3, h4, h5, h6, p, a {
   --bs-btn-disabled-bg: transparent;
   --bs-btn-disabled-border-color: var(--bs-primary);
   --bs-gradient: none;
+  border-radius: 50rem;
 }
 
 .btn-outline-secondary {
@@ -236,21 +238,39 @@ label{
   padding-bottom: 3.5rem;
 }
 
-.input {
-  background-color: var(--gradient-bg-end);
+input,
+.form-select,
+.form-control,
+.form-select:focus,
+.form-control:focus,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+select,
+textarea {
+  background-color: var(--bg-solid);
   border: 1px solid var(--border-level-2);
   color: var(--text-primary);
+  border-radius: 50rem;
+  
   &::placeholder {
     color: var(--text-tertiary);
     opacity: 1; // Firefox adds a lower opacity by default
   }
+  
   &:focus {
-    background-color: var(--gradient-bg-end);
+    background-color: var(--bg-solid);
     color: var(--text-primary);
+    border-color: var(--border-level-2);
+    box-shadow: none;
   }
 }
 
-.form-select {
-  background-color: var(--gradient-bg-end);
-  color: var(--text-primary); 
-} 
+.badge{
+  border-radius: 50rem;
+}

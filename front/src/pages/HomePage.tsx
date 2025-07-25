@@ -289,9 +289,9 @@ const HomePage: React.FC = () => {
           <div className="container">
             <div className="row">
                 <div className="col-md-6 mb-4 mb-md-0">
-                    <div className="card h-100">
+                    <div className="card h-100 border-0">
                         <div className="card-body">
-                        <h5 className="card-title">
+                        <h5 className="card-title text-primary">
                             <i className="mdi mdi-calendar-plus text-primary me-2"></i>
                             Agendar Nueva Cita
                         </h5>
@@ -301,9 +301,9 @@ const HomePage: React.FC = () => {
                     </div>
                 </div>
                 <div className="col-md-6">
-                    <div className="card h-100">
+                    <div className="card h-100 border-0">
                         <div className="card-body">
-                        <h5 className="card-title">
+                        <h5 className="card-title text-primary">
                             <i className="mdi mdi-calendar-clock text-primary me-2"></i>
                             Mis Próximas Citas
                         </h5>
@@ -321,13 +321,13 @@ const HomePage: React.FC = () => {
         <div className="container">
             <div className="row">
                 <div className="col-12">
-                <div className="card bg-primary text-white">
+                <div className="card bg-primary text-white border-0">
                     <div className="card-body text-center py-5">
                     <h2 className="card-title">¿Eres un profesional de la salud?</h2>
-                    <p className="card-text lead">
+                    <p className="card-text text-white lead">
                         Únete a nuestra plataforma y conecta con miles de pacientes
                     </p>
-                    <Link to="/registro-doctor" className="btn btn-light btn-lg">
+                    <Link to="/registro-doctor" className="btn btn-outline-light rounded-pill btn-lg">
                         Registrarse como Doctor
                     </Link>
                     </div>
