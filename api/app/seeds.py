@@ -219,7 +219,8 @@ def crear_semillas_completas(db: Session):
         # Dr. Carlos Eduardo Mendoza Rivera - Cardiología
         DoctorEspecialidad(doctor_id=1, especialidad_id=1),
         DoctorEspecialidad(doctor_id=1, especialidad_id=9),  # También Medicina Interna
-        
+        DoctorEspecialidad(doctor_id=1, especialidad_id=2),  # También Dermatología
+
         # Dra. Ana María Rodríguez Castillo - Dermatología y Neurología
         DoctorEspecialidad(doctor_id=2, especialidad_id=2),
         DoctorEspecialidad(doctor_id=2, especialidad_id=3),

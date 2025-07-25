@@ -53,8 +53,8 @@
   --border-level-1: rgba(121, 26, 46, 0.05);
   --border-level-2: rgba(87, 132, 255, 0.16);
   --border-level-3: rgba(26, 67, 121, 0.2);
-  --surface-level-1: rgba(87, 104, 255, 0.425);
-  --surface-level-2: rgba(7, 91, 139, 0.08);
+  --surface-level-1: rgba(7, 91, 139, 0.08);
+  --surface-level-2: rgba(7, 91, 139, 0.3);
   --surface-level-3: rgba(87, 160, 255, 0.16);
   --surface-level-4: rgba(87, 160, 255, 0.32);
   // --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -65,7 +65,7 @@
   --background: linear-gradient(0deg,rgb(31, 31, 34) 52%, rgb(33, 38, 59) 100%);
   --bg-solid: rgb(28, 28, 31);
   --on-accent: rgb(67, 77, 109);
-  --bs-primary: rgb(32, 70, 126);
+  --bs-primary: rgb(46, 78, 126);
   --bs-primary-b: rgba(0, 119, 255, 0.7);
   --gradient-bg-start: rgba(35, 46, 75, 0.7);
   --gradient-bg-end: rgb(28, 28, 31);
@@ -76,8 +76,8 @@
   --border-level-1: rgba(26, 36, 121, 0.1);
   --border-level-2: rgba(88, 141, 255, 0.16);
   --border-level-3: rgba(88, 113, 255, 0.1);
-  --surface-level-1: rgba(88, 141, 255, 0.04);
-  --surface-level-2: rgba(88, 155, 255, 0.4);
+  --surface-level-1: rgba(7, 91, 139, 0.1);
+  --surface-level-2: rgba(7, 91, 139, 0.2);
   --surface-level-3: rgba(88, 146, 255, 0.3);
   --surface-level-4: rgba(88, 119, 255, 0.3);
   // --box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
@@ -146,11 +146,11 @@ h1, h2, h3, h4, h5, h6, p, a {
 .btn-outline-primary {
   --bs-btn-color: var(--bs-primary);
   --bs-btn-border-color: var(--bs-primary);
-  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-color: white;
   --bs-btn-hover-bg: var(--bs-primary);
   --bs-btn-hover-border-color: var(--bs-primary);
   --bs-btn-focus-shadow-rgb: var(--bs-primary);
-  --bs-btn-active-color: #fff;
+  --bs-btn-active-color: white;
   --bs-btn-active-bg: var(--bs-primary);
   --bs-btn-active-border-color: var(--bs-primary);
   --bs-btn-active-shadow: inset 0 3px 5px var(--surface-level-3);

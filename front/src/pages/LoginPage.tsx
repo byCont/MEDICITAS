@@ -51,7 +51,7 @@ const LoginPage: React.FC = () => {
             <div className="card-body">
               <div className="text-center mb-4">
                 <i className="mdi mdi-heart-pulse mdi-xl text-primary mb-3"></i>
-                <h2 className="card-title">Iniciar Sesión</h2>
+                <h2 className="card-title text-primary">Iniciar Sesión</h2>
                 <p className="text-muted">Accede a tu cuenta de MediCitas</p>
               </div>
 

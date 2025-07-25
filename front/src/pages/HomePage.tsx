@@ -168,53 +168,59 @@ const HomePage: React.FC = () => {
             </h2>
             <div className="row g-4">
               {searchResults.map((doctor) => (
-                <div key={doctor.id} className="col-md-6 col-lg-4">
+                <div key={doctor.id} className="col-md-12 col-lg-12">
                   <div className="card h-100">
                     <div className="card-body">
-                      <div className="d-flex align-items-center mb-3">
-                        {doctor.foto_perfil_url && (
-                          <img
-                            src={doctor.foto_perfil_url}
-                            alt={doctor.nombre_completo}
-                            className="rounded-circle img-fluid me-1"
-                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                            loading="lazy"
-                          />
-                        )}
-                        <div>
-                          <h5 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h5>
-                          <small className="text-muted">Cédula: {doctor.cedula_profesional}</small>
+                      <div className="d-flex flex-column flex-md-row">
+                        <div className="flex-grow-1 me-md-4">
+                          <div className="d-flex flex-column flex-sm-row align-items-sm-center mb-3">
+                            {doctor.foto_perfil_url && (
+                              <div className="me-3 mb-2 mb-sm-0" style={{ flexShrink: 0 }}>
+                                <img
+                                  src={doctor.foto_perfil_url}
+                                  alt={doctor.nombre_completo}
+                                  className="rounded-circle img-fluid"
+                                  style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                                  loading="lazy"
+                                />
+                              </div>
+                            )}
+                            <div className="text-center text-sm-start">
+                              <h2 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h2>
+                              <small className="text-muted">Cédula: {doctor.cedula_profesional}</small>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-1">
+                            <h6 className="fw-semibold d-inline-block me-2">Especialidades:</h6>
+                            <div className="d-inline-block">
+                              {doctor.especialidades.map((esp, index) => (
+                                <span key={index} className="badge bg-secondary me-1 mb-1">
+                                  {esp}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {doctor.biografia && (
+                            <p className="card-text text-muted medium mb-3 mb-md-0">
+                              {doctor.biografia.length > 150 
+                                ? `${doctor.biografia.substring(0, 150)}...` 
+                                : doctor.biografia
+                              }
+                            </p>
+                          )}
                         </div>
-                      </div>
-                      
-                      <div className="mb-3">
-                        <h6 className="fw-semibold mb-2">Especialidades:</h6>
-                        <div className="d-flex flex-wrap gap-1">
-                          {doctor.especialidades.map((esp, index) => (
-                            <span key={index} className="badge bg-secondary">
-                              {esp}
-                            </span>
-                          ))}
+                        
+                        <div className="d-flex flex-column justify-content-center align-items-center align-items-md-end" style={{ minWidth: '140px' }}>
+                          <Link to={`/doctor/${doctor.id}`} className="btn btn-outline-primary btn-sm mb-2 w-100 w-md-auto">
+                            Ver Perfil
+                          </Link>
+                          <Link to={`/doctor/${doctor.id}?action=book`} className="btn btn-primary btn-sm w-100 w-md-auto">
+                            <i className="mdi mdi-calendar-plus me-1"></i>
+                            Reservar
+                          </Link>
                         </div>
-                      </div>
-                      
-                      {doctor.biografia && (
-                        <p className="card-text text-muted small">
-                          {doctor.biografia.length > 100 
-                            ? `${doctor.biografia.substring(0, 100)}...` 
-                            : doctor.biografia
-                          }
-                        </p>
-                      )}
-                      
-                      <div className="d-flex gap-2 mt-auto">
-                        <Link to={`/doctor/${doctor.id}`} className="btn btn-outline-primary btn-sm flex-fill">
-                          Ver Perfil
-                        </Link>
-                        <Link to={`/doctor/${doctor.id}?action=book`} className="btn btn-primary btn-sm flex-fill">
-                          <i className="mdi mdi-calendar-plus me-1"></i>
-                          Reservar
-                        </Link>
                       </div>
                     </div>
                   </div>

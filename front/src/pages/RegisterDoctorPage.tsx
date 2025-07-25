@@ -154,7 +154,7 @@ const RegisterDoctorPage: React.FC = () => {
             <div className="card-body">
               <div className="text-center mb-4">
                 <i className="mdi mdi-stethoscope mdi-xl text-primary mb-3"></i>
-                <h2 className="card-title">Registro de Doctor</h2>
+                <h2 className="card-title text-primary">Registro de Doctor</h2>
                 <p className="text-muted">Únete a nuestra plataforma como profesional de la salud</p>
               </div>
 
@@ -384,7 +384,7 @@ const RegisterDoctorPage: React.FC = () => {
                   <i className="mdi mdi-login me-2"></i>
                   Iniciar Sesión
                 </Link>
-                <Link to="/registro" className="btn btn-outline-secondary">
+                <Link to="/registro" className="btn btn-outline-primary">
                   <i className="mdi mdi-account-plus me-2"></i>
                   Registro de Paciente
                 </Link>

@@ -102,7 +102,7 @@ const RegisterPage: React.FC = () => {
             <div className="card-body">
               <div className="text-center mb-4">
                 <i className="mdi mdi-account-plus mdi-xl text-primary mb-3"></i>
-                <h2 className="card-title">Registro de Paciente</h2>
+                <h2 className="card-title text-primary">Registro de Paciente</h2>
                 <p className="text-muted">Crea tu cuenta para agendar citas médicas</p>
               </div>
 

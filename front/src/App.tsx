@@ -17,7 +17,7 @@ import './styles.scss';
 const App: React.FC = () => {
   return (
 <AuthProvider>
-        <div className="d-flex flex-column vh-100">
+        <div className="d-flex flex-column">
           <Navbar />
           <main className="flex-shrink-0">
             <Routes>

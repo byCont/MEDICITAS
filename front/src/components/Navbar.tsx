@@ -66,11 +66,11 @@ const Navbar: React.FC = () => {
                   >
                     <i className="mdi mdi-account-circle"></i> {user?.nombre_completo}
                   </a>
-                  <ul className="dropdown-menu">
+                  <ul className="dropdown-menu bg-dark">
                     <li>
-                      <a className="dropdown-item" href="#">
+                      <Link className="nav-link text-white" to="/mis-citas">
                         <i className="mdi mdi-account"></i> Mi Perfil
-                      </a>
+                      </Link>
                     </li>
                     {user?.rol === 'Doctor' && (
                       <li>
@@ -81,8 +81,8 @@ const Navbar: React.FC = () => {
                     )}
                     <li><hr className="dropdown-divider" /></li>
                     <li>
-                      <button className="dropdown-item" onClick={handleLogout}>
-                        <i className="mdi mdi-logout"></i> Cerrar Sesión
+                      <button className="dropdown-item text-white" onClick={handleLogout}>
+                        <i className="mdi mdi-logout text-white"></i> Cerrar Sesión
                       </button>
                     </li>
                   </ul>
