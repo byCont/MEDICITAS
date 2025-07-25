@@ -87,7 +87,7 @@ const MisCitasPage: React.FC = () => {
             <i className="mdi mdi-calendar-clock text-primary me-3"></i>
             Mis Citas
           </h1>
-          <p className="text-muted lead">
+          <p className="text-muted fw-semibold lead">
             Gestiona tus citas médicas, {user?.nombre_completo}
           </p>
         </div>
@@ -271,11 +271,11 @@ const MisCitasPage: React.FC = () => {
       )}
 
       {/* Call to Action */}
-      <div className="row mt-5">
+      <div className="row m-5">
         <div className="col-12">
-          <div className="card bg-light">
+          <div className="card">
             <div className="card-body text-center py-4">
-              <h4 className="card-title">¿Necesitas agendar una nueva cita?</h4>
+              <h4 className="card-title text-primary">¿Necesitas agendar una nueva cita?</h4>
               <p className="card-text text-muted">
                 Encuentra al especialista que necesitas y agenda tu cita en minutos
               </p>

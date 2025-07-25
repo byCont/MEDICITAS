@@ -39,16 +39,16 @@
 }
 
 :root {
-  --background: linear-gradient(0deg,#eeeded 50%, rgb(224, 235, 252) 100%);
+  --background: linear-gradient(0deg,#eeeded 50%, rgb(92, 118, 156) 100%);
   --bg-solid: rgb(220, 228, 241);
   --on-accent: rgb(114, 136, 196);
   --bs-primary: rgb(32, 70, 126);
   --bs-primary-b: rgba(0, 119, 255, 0.7);
-  --gradient-bg-start: rgba(224, 233, 252, 0.8);
-  --gradient-bg-end: #ededee;
+  --gradient-bg-start: #eeeded;
+  --gradient-bg-end: rgb(92, 118, 156);
   --info: rgba(0, 140, 255, 0.3);
   --text-primary: rgba(0, 0, 0, 0.8);
-  --text-secondary: rgb(94, 114, 180);
+  --text-secondary: rgb(65, 80, 128);
   --text-tertiary: rgba(0, 0, 0, 0.5);
   --border-level-1: rgba(121, 26, 46, 0.05);
   --border-level-2: rgba(87, 132, 255, 0.16);
@@ -62,8 +62,8 @@
 }
 /* Estilos para el tema oscuro */
 .dark-theme {
-  --background: linear-gradient(0deg,rgb(31, 31, 34) 52%, rgb(33, 38, 59) 100%);
-  --bg-solid: rgb(28, 28, 31);
+  --background: linear-gradient(0deg,rgb(12, 19, 27) 52%, rgb(30, 43, 68) 100%);
+  --bg-solid: rgb(28, 29, 31);
   --on-accent: rgb(67, 77, 109);
   --bs-primary: rgb(46, 78, 126);
   --bs-primary-b: rgba(0, 119, 255, 0.7);
@@ -124,7 +124,7 @@ h1, h2, h3, h4, h5, h6, p, a {
   &:hover {
     box-shadow: var(--box-shadow);
     background: var(--surface-level-2);
-    transform: scale(1.01);
+    transform: scale(1.005);
     border: var(--border);
     border-radius: 1rem;
   }

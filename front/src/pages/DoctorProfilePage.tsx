@@ -243,14 +243,14 @@ const DoctorProfilePage: React.FC = () => {
                   </div>
 
                   {doctor.telefono && (
-                    <div className="mb-2">
-                      <i className="mdi mdi-phone text-primary me-2"></i>
+                    <div className="mb-2 text-primary">
+                      <i className="mdi mdi-phone me-2"></i>
                       <span>{doctor.telefono}</span>
                     </div>
                   )}
 
-                  <div className="mb-3">
-                    <i className="mdi mdi-email text-primary me-2"></i>
+                  <div className="mb-3 text-primary">
+                    <i className="mdi mdi-email me-2"></i>
                     <span>{doctor.email}</span>
                   </div>
 
@@ -275,7 +275,7 @@ const DoctorProfilePage: React.FC = () => {
                   <div className="col-12">
                     <h5 className="fw-semibold mb-3">
                       <i className="mdi mdi-account-details text-primary me-2"></i>
-                      Sobre el Doctor
+                      Sobre mí
                     </h5>
                     <p className="text-muted">{doctor.biografia}</p>
                   </div>
@@ -432,21 +432,21 @@ const DoctorProfilePage: React.FC = () => {
           {/* Información adicional */}
           <div className="card mt-3">
             <div className="card-body">
-              <h6 className="card-title">
-                <i className="mdi mdi-information text-primary me-2"></i>
+              <h6 className="card-title text-primary">
+                <i className="mdi mdi-information me-2"></i>
                 Información de Citas
               </h6>
               <ul className="list-unstyled mb-0">
-                <li className="mb-2">
-                  <i className="mdi mdi-clock text-muted me-2"></i>
+                <li className="mb-2 text-primary">
+                  <i className="mdi mdi-clock me-2"></i>
                   <small>Duración estándar: 30-60 min</small>
                 </li>
-                <li className="mb-2">
-                  <i className="mdi mdi-calendar text-muted me-2"></i>
+                <li className="mb-2 text-primary">
+                  <i className="mdi mdi-calendar me-2"></i>
                   <small>Disponible Lun-Vie 9:00-17:00</small>
                 </li>
-                <li className="mb-2">
-                  <i className="mdi mdi-phone text-muted me-2"></i>
+                <li className="mb-2 text-primary">
+                  <i className="mdi mdi-phone me-2"></i>
                   <small>Confirmación por teléfono</small>
                 </li>
               </ul>

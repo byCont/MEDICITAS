@@ -16,10 +16,10 @@ import './styles.scss';
 
 const App: React.FC = () => {
   return (
-<AuthProvider>
-        <div className="d-flex flex-column">
-          <Navbar />
-          <main className="flex-shrink-0">
+    <AuthProvider>
+      <div className="d-flex flex-column min-vh-100">
+        <Navbar />
+        <main className="flex-grow-1">
             <Routes>
               {/* Rutas públicas */}
               <Route path="/" element={<HomePage />} />

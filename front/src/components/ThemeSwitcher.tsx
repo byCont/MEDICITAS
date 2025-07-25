@@ -25,7 +25,7 @@ const ThemeSwitcher: React.FC = () => {
   };
 
   return (
-    <button className="btn btn-outline-secondary" onClick={toggleTheme}>
+    <button className="btn btn-primary rounded-circle" onClick={toggleTheme}>
       <i className={`mdi ${isDarkMode ? 'mdi-weather-sunny' : 'mdi-weather-night'}`}></i>
     </button>
   );

@@ -185,7 +185,7 @@ const DoctoresPage: React.FC = () => {
                       )}
                     </div>
                     <div className="flex-grow-1">
-                      <h5 className="card-title mb-1">{doctor.nombre_completo}</h5>
+                      <h5 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h5>
                       <small className="text-muted">
                         <i className="mdi mdi-certificate me-1"></i>
                         Cédula: {doctor.cedula_profesional}
