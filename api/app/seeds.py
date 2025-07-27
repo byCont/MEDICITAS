@@ -219,7 +219,7 @@ def crear_semillas_completas(db: Session):
         # Dr. Carlos Eduardo Mendoza Rivera - Cardiología
         DoctorEspecialidad(doctor_id=1, especialidad_id=1),
         DoctorEspecialidad(doctor_id=1, especialidad_id=9),  # También Medicina Interna
-        DoctorEspecialidad(doctor_id=1, especialidad_id=2),  # También Dermatología
+        DoctorEspecialidad(doctor_id=1, especialidad_id=2),  # y Dermatología
 
         # Dra. Ana María Rodríguez Castillo - Dermatología y Neurología
         DoctorEspecialidad(doctor_id=2, especialidad_id=2),
@@ -335,6 +335,30 @@ def crear_semillas_completas(db: Session):
             doctor_id=5,
             calificacion=4,
             comentario="Buen diagnóstico y tratamiento. El doctor fue muy claro en las explicaciones.",
+            es_anonima=False
+        ),
+        Resena(
+            cita_id=6,  
+            paciente_id=7,
+            doctor_id=1,
+            calificacion=4,
+            comentario="Buen diagnóstico y tratamiento del Dr. Carlos Eduardo, fue muy claro.",
+            es_anonima=False
+        ),
+        Resena(
+            cita_id=3,  
+            paciente_id=7,
+            doctor_id=2,
+            calificacion=4,
+            comentario="Buen diagnóstico y tratamiento del Dr, fue muy profesional, se le nota la experiencia.",
+            es_anonima=False
+        ),
+        Resena(
+            cita_id=5, 
+            paciente_id=7,
+            doctor_id=1,
+            calificacion=4,
+            comentario="Buen diagnóstico y tratamiento del Dr, fue muy profesional, se le nota la experiencia.",
             es_anonima=False
         ),
     ]

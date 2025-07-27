@@ -159,7 +159,9 @@ h1, h2, h3, h4, h5, h6, p, a {
   --bs-btn-disabled-bg: transparent;
   --bs-btn-disabled-border-color: var(--bs-primary);
   --bs-gradient: none;
-  border-radius: 50rem;
+  border-radius: 50rem;  
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
 
 .btn-outline-secondary {
@@ -263,14 +265,15 @@ textarea {
     opacity: 1; // Firefox adds a lower opacity by default
   }
   
-  &:focus {
-    background-color: var(--bg-solid);
-    color: var(--text-primary);
-    border-color: var(--border-level-2);
-    box-shadow: none;
-  }
 }
 
 .badge{
   border-radius: 50rem;
+}
+
+  // Solo mantenemos el CSS que Bootstrap no puede hacer: el efecto de desenfoque.
+
+.backdrop-blur {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }

@@ -79,6 +79,16 @@ export interface Especialidad {
   fecha_creacion: string;
 }
 
+export interface Resena {
+  id: number;
+  paciente_id: number;
+  paciente_nombre: string;
+  doctor_id: number;
+  calificacion: number;
+  comentario?: string;
+  fecha: string;
+}
+
 export interface Doctor {
   id: number;
   nombre_completo: string;
@@ -88,6 +98,7 @@ export interface Doctor {
   biografia?: string;
   foto_perfil_url?: string;
   especialidades: string[];
+  resenas?: Resena[];
 }
 
 export interface Cita {

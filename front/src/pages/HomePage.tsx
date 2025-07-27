@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { specialtyService, doctorService, Doctor, Especialidad } from '../services/api';
 import './pages.scss';
+import especialidadesImage from '../assets/images/especialidades.png';
 
 const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,7 +76,7 @@ const HomePage: React.FC = () => {
                 {/* Barra de búsqueda */}
                 <form onSubmit={handleSearch} className="row g-2 justify-content-center mb-4">
                   <div className="col-md-8">
-                    <div className="subject-search">
+                    <div className="subject-search backdrop-blur">
                       <div className="p-0">
                         <div className="input-group input-group-lg">
                           <span className="input-group-text bg-transparent border-0">
@@ -134,29 +135,29 @@ const HomePage: React.FC = () => {
                 {/* Estadísticas */}
                 <div className="row g-2 mb-4 justify-content-end">
                   <div className="col-auto">
-                    <div className=" rounded-4 bg-white border-0 shadow-sm">
+                    <div className="card rounded-4 backdrop-blur border-0 shadow-sm">
                       <div className="card-body text-center p-2">
-                        <i className="mdi mdi-doctor mdi-1x text-dark mb-1"></i>
-                        <h4 className="fw-bold mb-0 text-dark">+500</h4>
-                        <small className="text-dark">Especialistas</small>
+                        <i className="mdi mdi-doctor mdi-1x text-primary mb-1"></i>
+                        <h4 className="fw-bold mb-0 text-primary">+ 500</h4>
+                        <small className="text-primary">Especialistas</small>
                       </div>
                     </div>
                   </div>
                   <div className="col-auto">
-                    <div className=" rounded-4 bg-white border-0 shadow-sm">
+                    <div className="card rounded-4 backdrop-blur border-0 shadow-sm">
                       <div className="card-body text-center p-2">
-                        <i className="mdi mdi-heart-pulse mdi-1x text-dark mb-1"></i>
-                        <h4 className="fw-bold mb-0 text-dark">+50</h4>
-                        <small className="text-dark">Especialidades</small>
+                        <i className="mdi mdi-heart-pulse mdi-1x text-primary mb-1"></i>
+                        <h4 className="fw-bold mb-0 text-primary">+ 50</h4>
+                        <small className="text-primary">Especialidades</small>
                       </div>
                     </div>
                   </div>
                   <div className="col-auto">
-                    <div className=" rounded-4 bg-white border-0 shadow-sm">
+                    <div className="card rounded-4 backdrop-blur border-0 shadow-sm">
                       <div className="card-body text-center p-2">
-                        <i className="mdi mdi-clock mdi-1x text-dark mb-1"></i>
-                        <h4 className="fw-bold mb-0 text-dark">24/7</h4>
-                        <small className="text-dark">Disponibilidad</small>
+                        <i className="mdi mdi-clock mdi-1x text-primary mb-1"></i>
+                        <h4 className="fw-bold mb-0 text-primary">24/7</h4>
+                        <small className="text-primary">Disponibilidad</small>
                       </div>
                     </div>
                   </div>
@@ -253,31 +254,50 @@ const HomePage: React.FC = () => {
                 <p className="text-muted">Encuentra especialistas en las áreas médicas más solicitadas</p>
               </div>
 
-              <div className="row g-4">
-                {specialties.map((specialty) => (
-                  <div key={specialty.id} className="col-md-6 col-lg-4">
-                    <div 
-                      className="card h-100 cursor-pointer text-primary"
-                      onClick={() => handleSpecialtyClick(specialty.nombre)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className="card-body text-center">
-                        <i className="mdi mdi-medical-bag mdi-xl text-primary mb-3"></i>
-                        <h5 className="card-title">{specialty.nombre}</h5>
-                        <p className="card-text text-muted">
-                          {specialty.descripcion || 'Especialidad médica disponible'}
-                        </p>
-                        <small className="text-primary">Ver especialistas →</small>
+              <div className="position-relative">
+                {/* Left Side Image - Positioned absolutely to allow overlap */}
+                <div className="d-none d-md-block" style={{
+                  position: 'absolute',
+                  left: '-70px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 1,
+                  width: '400px',
+                  height: '500px'
+                }}>
+                  <img 
+                    src={especialidadesImage}
+                    alt="Especialidades médicas" 
+                    className="img-fluid h-100"
+                    style={{ objectFit: 'contain' }}
+                  />
+                </div>
+                
+                {/* Cards Section - 6 columns */}
+                <div className="position-relative mx-auto" style={{ zIndex: 2, maxWidth: '800px' }}>
+                  <div className="row g-4">
+                    {specialties.map((specialty) => (
+                      <div key={specialty.id} className="col-md-6 col-lg-4">
+                        <div 
+                          className="card h-100 cursor-pointer text-primary backdrop-blur"
+                          onClick={() => handleSpecialtyClick(specialty.nombre)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <div className="card-body text-center">
+                            <i className="mdi mdi-medical-bag mdi-xl text-primary mb-2"></i>
+                            <h6 className="card-title">{specialty.nombre}</h6>
+                            <small className="text-primary">Ver especialistas →</small>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-
-              <div className="text-center mt-4">
-                <Link to="/especialidades" className="btn btn-outline-primary">
-                  Ver todas las especialidades
-                </Link>
+                  <div className="text-center mt-4">
+                    <Link to="/especialidades" className="btn btn-outline-primary">
+                      Ver todas las especialidades
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

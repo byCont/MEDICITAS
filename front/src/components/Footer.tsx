@@ -6,14 +6,13 @@ const Footer: React.FC = () => {
       <div className="container">
         <div className="row">
           {/* Brand and description */}
-          <div className="col-lg-4 col-md-6 mb-4">
-            <div className="d-flex align-items-center mb-3">
+          <div className="col-lg-4 col-md-6 mb-0">
+            <div className="d-flex align-items-center mb-0">
               <i className="mdi mdi-heart-pulse mdi-xl text-primary me-2"></i>
-              <h5 className="fw-bold">MediCitas</h5>
-            </div>
-            <p className="text-muted">
-              Conectamos pacientes con los mejores profesionales médicos para un cuidado de salud de calidad.
-            </p>
+              <h5 className="fw-bold">MediCitas</h5>  
+            </div>          
+            <p className="text-muted">"Especialistas para ti, cuando lo necesitas."</p>  
+            <p className="text-primary">Conectamos pacientes con los mejores profesionales médicos para un cuidado de salud de calidad.</p>
             <div className="d-flex gap-3">
               <a href="#" >
                 <i className="mdi mdi-facebook mdi-lg"></i>

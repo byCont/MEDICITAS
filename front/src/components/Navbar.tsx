@@ -12,20 +12,12 @@ const Navbar: React.FC = () => {
     navigate('/');
   };
 
-  // Solo mantenemos el CSS que Bootstrap no puede hacer: el efecto de desenfoque.
-  const customStyles = `
-    .backdrop-blur {
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-    }
-  `;
-
   // Clases comunes para los elementos de la barra de navegación para no repetirlas.
   const navElementClasses = "backdrop-blur bg-light bg-opacity-25 rounded-pill px-3 py-2 m-1 text-primary text-decoration-none d-inline-flex align-items-center";
 
   return (
     <>
-      <style>{customStyles}</style>
+      {/* <style>{customStyles}</style> */}
       <nav className="navbar navbar-expand-lg sticky-top bg-transparent py-2">
         <div className="container-fluid">
           <Link className="fs-5 fw-semibold bg-primary rounded-pill px-2 py-1 m-1 text-white text-decoration-none d-inline-flex align-items-center" to="/">
@@ -79,22 +71,22 @@ const Navbar: React.FC = () => {
                     >
                       <i className="mdi mdi-account-circle me-2"></i> {user?.nombre_completo}
                     </a>
-                    <ul className="dropdown-menu dropdown-menu-end backdrop-blur bg-dark bg-opacity-50 border-light border-opacity-25 mt-2">
+                    <ul className="dropdown-menu dropdown-menu-end backdrop-blur bg-opacity-50 border-light border-opacity-25 mt-2">
                       <li>
-                        <Link className="dropdown-item text-white" to="/mis-citas">
+                        <Link className="dropdown-item text-dark" to="/mis-citas">
                           <i className="mdi mdi-account me-2"></i> Mi Perfil
                         </Link>
                       </li>
                       {user?.rol === 'Doctor' && (
                         <li>
-                          <a className="dropdown-item text-white" href="#">
+                          <a className="dropdown-item text-dark" href="#">
                             <i className="mdi mdi-stethoscope me-2"></i> Panel Doctor
                           </a>
                         </li>
                       )}
                       <li><hr className="dropdown-divider border-light border-opacity-25" /></li>
                       <li>
-                        <button className="dropdown-item text-white" onClick={handleLogout}>
+                        <button className="dropdown-item text-dark" onClick={handleLogout}>
                           <i className="mdi mdi-logout me-2"></i> Cerrar Sesión
                         </button>
                       </li>

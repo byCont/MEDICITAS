@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { doctorService, appointmentService, specialtyService, Doctor, Especialidad } from '../services/api';
+import type { Doctor, Especialidad, Resena } from '../services/api';
+import { doctorService, appointmentService, specialtyService } from '../services/api';
 
 const DoctorProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
@@ -234,7 +236,7 @@ const DoctorProfilePage: React.FC = () => {
                       Especialidades:
                     </h6>
                     <div className="d-flex flex-wrap gap-2">
-                      {doctor.especialidades.map((esp, index) => (
+                      {doctor.especialidades.map((esp: string, index: number) => (
                         <span key={index} className="badge bg-secondary">
                           {esp}
                         </span>
@@ -288,7 +290,7 @@ const DoctorProfilePage: React.FC = () => {
         {/* Formulario de reserva */}
         <div className="col-lg-4">
           {showBookingForm && (
-            <div className="card">
+            <div className="card border-0 mb-4">
               <div className="card-header">
                 <h5 className="mb-0">
                   <i className="mdi mdi-calendar-plus text-primary me-2"></i>
@@ -301,13 +303,14 @@ const DoctorProfilePage: React.FC = () => {
                     <p className="text-muted mb-3">
                       Debes iniciar sesión para reservar una cita
                     </p>
-                    <button
+                    <Link
                       className="btn btn-primary"
-                      onClick={() => navigate('/login', { state: { from: location } })}
+                      to="/login"
+                      state={{ from: location }}
                     >
                       <i className="mdi mdi-login me-2"></i>
                       Iniciar Sesión
-                    </button>
+                    </Link>
                   </div>
                 ) : (
                   <form onSubmit={handleBookingSubmit}>
@@ -351,7 +354,7 @@ const DoctorProfilePage: React.FC = () => {
                         onChange={handleBookingChange}
                         required
                       >
-                        <option value="">Selecciona fecha y hora</option>
+                        <option value="">Selecciona fecha y hora disponible</option>
                         {generateAvailableSlots().slice(0, 20).map((slot) => (
                           <option key={slot} value={slot}>
                             {new Date(slot).toLocaleDateString('es-ES', {
@@ -387,7 +390,7 @@ const DoctorProfilePage: React.FC = () => {
                         Motivo de la consulta
                       </label>
                       <textarea
-                        className="form-control"
+                        className="form-control rounded-4"
                         id="motivo_consulta"
                         name="motivo_consulta"
                         rows={3}
@@ -417,9 +420,10 @@ const DoctorProfilePage: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        className="btn btn-outline-secondary"
+                        className="btn btn-outline-danger rounded-pill"
                         onClick={() => setShowBookingForm(false)}
                       >
+                        <i className="mdi mdi-cancel me-2"></i>
                         Cancelar
                       </button>
                     </div>
@@ -430,7 +434,7 @@ const DoctorProfilePage: React.FC = () => {
           )}
 
           {/* Información adicional */}
-          <div className="card mt-3">
+          <div className="card mb-4 border-0">
             <div className="card-body">
               <h6 className="card-title text-primary">
                 <i className="mdi mdi-information me-2"></i>
