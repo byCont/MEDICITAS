@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { specialtyService } from '../services/api';
 import type { Especialidad } from '../services/api';
+import EspecialidadCardSkeleton from '../components/Skeleton/EspecialidadCardSkeleton';
+import Pagination from '../components/Pagination';
 
 const EspecialidadesPage: React.FC = () => {
   const [specialties, setSpecialties] = useState<Especialidad[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredSpecialties, setFilteredSpecialties] = useState<Especialidad[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,15 +32,15 @@ const EspecialidadesPage: React.FC = () => {
 
   // Filtrar especialidades por término de búsqueda
   useEffect(() => {
+    let filtered = specialties;
     if (searchTerm) {
-      const filtered = specialties.filter(specialty =>
+      filtered = specialties.filter(specialty =>
         specialty.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (specialty.descripcion && specialty.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      setFilteredSpecialties(filtered);
-    } else {
-      setFilteredSpecialties(specialties);
     }
+    setFilteredSpecialties(filtered);
+    setCurrentPage(1); // Reset to first page on new search
   }, [specialties, searchTerm]);
 
   const handleSpecialtyClick = async (specialtyName: string) => {
@@ -44,17 +48,15 @@ const EspecialidadesPage: React.FC = () => {
     navigate(`/doctores?specialty=${encodeURIComponent(specialtyName)}`);
   };
 
-  if (loading) {
-    return (
-      <div className="container mt-5">
-        <div className="d-flex justify-content-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando especialidades...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredSpecialties.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredSpecialties.length / itemsPerPage);
+
+  const onPageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="container mt-4">
@@ -93,14 +95,20 @@ const EspecialidadesPage: React.FC = () => {
       <div className="row mb-4">
         <div className="col-12">
           <p className="text-muted">
-            Mostrando {filteredSpecialties.length} de {specialties.length} especialidades
+            Mostrando {currentItems.length} de {filteredSpecialties.length} especialidades
             {searchTerm && ` que coinciden con "${searchTerm}"`}
           </p>
         </div>
       </div>
 
       {/* Lista de especialidades */}
-      {filteredSpecialties.length === 0 ? (
+      {loading ? (
+        <div className="row g-4">
+          {Array.from({ length: itemsPerPage }).map((_, index) => (
+            <EspecialidadCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : filteredSpecialties.length === 0 ? (
         <div className="row">
           <div className="col-12 text-center">
             <i className="mdi mdi-medical-bag mdi-xl text-muted mb-3"></i>
@@ -111,36 +119,47 @@ const EspecialidadesPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="row g-4">
-          {filteredSpecialties.map((specialty) => (
-            <div key={specialty.id} className="col-md-6 col-lg-4">
-              <div 
-                className="card h-100 cursor-pointer"
-                onClick={() => handleSpecialtyClick(specialty.nombre)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="card-body text-center">
-                  <div className="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mx-auto mb-3" style={{ width: '80px', height: '80px' }}>
-                    <i className="mdi mdi-medical-bag mdi-xl text-primary"></i>
-                  </div>
-                  
-                  <h5 className="card-title text-primary">{specialty.nombre}</h5>
-                  
-                  <p className="card-text text-muted">
-                    {specialty.descripcion || 'Especialidad médica disponible en nuestra plataforma'}
-                  </p>
-                  
-                  <div className="mt-auto">
-                    <small className="text-primary fw-semibold">
-                      <i className="mdi mdi-arrow-right me-1"></i>
-                      Ver especialistas
-                    </small>
+        <>
+          <div className="row g-4">
+            {currentItems.map((specialty) => (
+              <div key={specialty.id} className="col-md-6 col-lg-4">
+                <div 
+                  className="card h-100 cursor-pointer"
+                  onClick={() => handleSpecialtyClick(specialty.nombre)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className="card-body text-center">
+                    <div className="d-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle mx-auto mb-3" style={{ width: '80px', height: '80px' }}>
+                      <i className="mdi mdi-medical-bag mdi-xl text-primary"></i>
+                    </div>
+                    
+                    <h5 className="card-title text-primary">{specialty.nombre}</h5>
+                    
+                    <p className="card-text text-muted">
+                      {specialty.descripcion || 'Especialidad médica disponible en nuestra plataforma'}
+                    </p>
+                    
+                    <div className="mt-auto">
+                      <small className="text-primary fw-semibold">
+                        <i className="mdi mdi-arrow-right me-1"></i>
+                        Ver especialistas
+                      </small>
+                    </div>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+          <div className="row mt-4">
+            <div className="col-12">
+              <Pagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                onPageChange={onPageChange} 
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Información adicional */}
@@ -212,4 +231,3 @@ const EspecialidadesPage: React.FC = () => {
 };
 
 export default EspecialidadesPage;
-

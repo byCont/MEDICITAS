@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { appointmentService } from '../services/api';
 import type { Cita } from '../services/api';
+import CitaCardSkeleton from '../components/Skeleton/CitaCardSkeleton';
 
 const MisCitasPage: React.FC = () => {
   const [citas, setCitas] = useState<Cita[]>([]);
@@ -67,18 +68,6 @@ const MisCitasPage: React.FC = () => {
     ['Completada', 'Cancelada', 'No Asistió'].includes(cita.estado) || isPastAppointment(cita.fecha_hora)
   );
 
-  if (loading) {
-    return (
-      <div className="container mt-5">
-        <div className="d-flex justify-content-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando citas...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mt-4">
       {/* Header */}
@@ -107,7 +96,7 @@ const MisCitasPage: React.FC = () => {
           <div className="card bg-primary bg-opacity-25 border-0">
             <div className="card-body text-center">
               <i className="mdi mdi-calendar-check mdi-lg mb-2 text-primary"></i>
-              <h4 className="text-primary">{citasProgramadas.length}</h4>
+              <h4 className="text-primary">{loading ? <span className="placeholder col-6"></span> : citasProgramadas.length}</h4>
               <p className="mb-0 text-primary">Citas Próximas</p>
             </div>
           </div>
@@ -116,7 +105,7 @@ const MisCitasPage: React.FC = () => {
           <div className="card bg-success bg-opacity-75 border-0">
             <div className="card-body text-center">
               <i className="mdi mdi-calendar-check mdi-lg mb-2 text-primary"></i>
-              <h4 className="text-primary">{citas.filter(c => c.estado === 'Completada').length}</h4>
+              <h4 className="text-primary">{loading ? <span className="placeholder col-6"></span> : citas.filter(c => c.estado === 'Completada').length}</h4>
               <p className="mb-0 text-primary">Citas Completadas</p>
             </div>
           </div>
@@ -125,14 +114,20 @@ const MisCitasPage: React.FC = () => {
           <div className="card bg-warning bg-opacity-75 border-0">
             <div className="card-body text-center">
               <i className="mdi mdi-calendar-multiple mdi-lg mb-2 text-primary"></i>
-              <h4 className="text-primary">{citas.length}</h4>
+              <h4 className="text-primary">{loading ? <span className="placeholder col-6"></span> : citas.length}</h4>
               <p className="mb-0 text-primary">Total de Citas</p>
             </div>
           </div>
         </div>
       </div>
 
-      {citas.length === 0 ? (
+      {loading ? (
+        <div className="row g-4">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <CitaCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : citas.length === 0 ? (
         <div className="row">
           <div className="col-12 text-center">
             <div className="card">
@@ -299,4 +294,3 @@ const MisCitasPage: React.FC = () => {
 };
 
 export default MisCitasPage;
-

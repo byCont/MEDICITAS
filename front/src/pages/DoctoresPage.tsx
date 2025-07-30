@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { doctorService, specialtyService } from '../services/api';
 import type { Doctor, Especialidad } from '../services/api';
+import DoctorPageSkeleton from '../components/Skeleton/DoctorPageSkeleton';
+import Pagination from '../components/Pagination';
 
 const DoctoresPage: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -10,6 +12,8 @@ const DoctoresPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
 
   useEffect(() => {
     const loadData = async () => {
@@ -54,23 +58,22 @@ const DoctoresPage: React.FC = () => {
     }
 
     setFilteredDoctors(filtered);
+    setCurrentPage(1); // Reset to first page on new search
   }, [doctors, searchTerm, selectedSpecialty]);
 
   const handleSpecialtyFilter = (specialtyName: string) => {
     setSelectedSpecialty(specialtyName === selectedSpecialty ? '' : specialtyName);
   };
 
-  if (loading) {
-    return (
-      <div className="container mt-5">
-        <div className="d-flex justify-content-center">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Cargando doctores...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredDoctors.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredDoctors.length / itemsPerPage);
+
+  const onPageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="container mt-4">
@@ -148,7 +151,7 @@ const DoctoresPage: React.FC = () => {
       <div className="row mb-4">
         <div className="col-12">
           <p className="text-muted">
-            Mostrando {filteredDoctors.length} de {doctors.length} doctores
+            Mostrando {currentItems.length} de {filteredDoctors.length} doctores
             {selectedSpecialty && ` en ${selectedSpecialty}`}
             {searchTerm && ` que coinciden con "${searchTerm}"`}
           </p>
@@ -156,7 +159,13 @@ const DoctoresPage: React.FC = () => {
       </div>
 
       {/* Lista de doctores */}
-      {filteredDoctors.length === 0 ? (
+      {loading ? (
+        <div className="row g-4">
+          {Array.from({ length: itemsPerPage }).map((_, index) => (
+            <DoctorPageSkeleton key={index} />
+          ))}
+        </div>
+      ) : filteredDoctors.length === 0 ? (
         <div className="row">
           <div className="col-12 text-center">
             <i className="mdi mdi-doctor mdi-xl text-muted mb-3"></i>
@@ -167,86 +176,97 @@ const DoctoresPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        <div className="row g-4">
-          {filteredDoctors.map((doctor) => (
-            <div key={doctor.id} className="col-md-6 col-lg-4">
-              <div className="card h-100">
-                <div className="card-body">
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                      {doctor.foto_perfil_url ? (
-                        <img
-                          src={doctor.foto_perfil_url}
-                          alt={doctor.nombre_completo}
-                          className="rounded-circle"
-                          style={{ width: '50px', height: '50px', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <i className="mdi mdi-doctor text-primary mdi-lg"></i>
-                      )}
+        <>
+          <div className="row g-4">
+            {currentItems.map((doctor) => (
+              <div key={doctor.id} className="col-md-6 col-lg-4">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <div className="d-flex align-items-center mb-3">
+                      <div className="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                        {doctor.foto_perfil_url ? (
+                          <img
+                            src={doctor.foto_perfil_url}
+                            alt={doctor.nombre_completo}
+                            className="rounded-circle"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <i className="mdi mdi-doctor text-primary mdi-lg"></i>
+                        )}
+                      </div>
+                      <div className="flex-grow-1">
+                        <h5 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h5>
+                        <small className="text-muted">
+                          <i className="mdi mdi-certificate me-1"></i>
+                          Cédula: {doctor.cedula_profesional}
+                        </small>
+                      </div>
                     </div>
-                    <div className="flex-grow-1">
-                      <h5 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h5>
-                      <small className="text-muted">
-                        <i className="mdi mdi-certificate me-1"></i>
-                        Cédula: {doctor.cedula_profesional}
-                      </small>
+
+                    <div className="mb-3">
+                      <h6 className="fw-semibold mb-2">
+                        <i className="mdi mdi-medical-bag me-1"></i>
+                        Especialidades:
+                      </h6>
+                      <div className="d-flex flex-wrap gap-1">
+                        {doctor.especialidades.map((esp, index) => (
+                          <span key={index} className="badge bg-secondary">
+                            {esp}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mb-3">
-                    <h6 className="fw-semibold mb-2">
-                      <i className="mdi mdi-medical-bag me-1"></i>
-                      Especialidades:
-                    </h6>
-                    <div className="d-flex flex-wrap gap-1">
-                      {doctor.especialidades.map((esp, index) => (
-                        <span key={index} className="badge bg-secondary">
-                          {esp}
-                        </span>
-                      ))}
+                    {doctor.telefono && (
+                      <div className="mb-2">
+                        <small className="text-muted">
+                          <i className="mdi mdi-phone me-1"></i>
+                          {doctor.telefono}
+                        </small>
+                      </div>
+                    )}
+
+                    {doctor.biografia && (
+                      <p className="card-text text-muted small mb-3">
+                        {doctor.biografia.length > 120
+                          ? `${doctor.biografia.substring(0, 120)}...`
+                          : doctor.biografia
+                        }
+                      </p>
+                    )}
+
+                    <div className="d-flex gap-2 mt-auto">
+                      <Link
+                        to={`/doctor/${doctor.id}`}
+                        className="btn btn-outline-primary btn-sm flex-fill"
+                      >
+                        <i className="mdi mdi-account-details me-1"></i>
+                        Ver Perfil
+                      </Link>
+                      <Link
+                        to={`/doctor/${doctor.id}?action=book`}
+                        className="btn btn-primary btn-sm flex-fill"
+                      >
+                        <i className="mdi mdi-calendar-plus me-1"></i>
+                        Reservar
+                      </Link>
                     </div>
-                  </div>
-
-                  {doctor.telefono && (
-                    <div className="mb-2">
-                      <small className="text-muted">
-                        <i className="mdi mdi-phone me-1"></i>
-                        {doctor.telefono}
-                      </small>
-                    </div>
-                  )}
-
-                  {doctor.biografia && (
-                    <p className="card-text text-muted small mb-3">
-                      {doctor.biografia.length > 120
-                        ? `${doctor.biografia.substring(0, 120)}...`
-                        : doctor.biografia
-                      }
-                    </p>
-                  )}
-
-                  <div className="d-flex gap-2 mt-auto">
-                    <Link
-                      to={`/doctor/${doctor.id}`}
-                      className="btn btn-outline-primary btn-sm flex-fill"
-                    >
-                      <i className="mdi mdi-account-details me-1"></i>
-                      Ver Perfil
-                    </Link>
-                    <Link
-                      to={`/doctor/${doctor.id}?action=book`}
-                      className="btn btn-primary btn-sm flex-fill"
-                    >
-                      <i className="mdi mdi-calendar-plus me-1"></i>
-                      Reservar
-                    </Link>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+          <div className="row mt-4">
+            <div className="col-12">
+              <Pagination 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                onPageChange={onPageChange} 
+              />
             </div>
-          ))}
-        </div>
+          </div>
+        </>
       )}
 
       {/* Call to Action */}
@@ -277,4 +297,3 @@ const DoctoresPage: React.FC = () => {
 };
 
 export default DoctoresPage;
-

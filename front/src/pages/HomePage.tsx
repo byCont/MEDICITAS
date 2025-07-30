@@ -4,26 +4,39 @@ import { specialtyService, doctorService } from '../services/api';
 import type { Doctor, Especialidad } from '../services/api';
 import './pages.scss';
 import especialidadesImage from '../assets/images/especialidades.png';
+import DoctorCardSkeleton from '../components/Skeleton/DoctorCardSkeleton';
+import SpecialtyCardSkeleton from '../components/Skeleton/SpecialtyCardSkeleton';
 
 const HomePage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<Doctor[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [specialties, setSpecialties] = useState<Especialidad[]>([]);
+  const [isLoadingSpecialties, setIsLoadingSpecialties] = useState(true);
 
   // Cargar especialidades al montar el componente
   useEffect(() => {
     const loadSpecialties = async () => {
+      setIsLoadingSpecialties(true);
       try {
         const data = await specialtyService.getAll();
         setSpecialties(data.slice(0, 6)); // Mostrar solo las primeras 6
       } catch (error) {
         console.error('Error loading specialties:', error);
+      } finally {
+        setIsLoadingSpecialties(false);
       }
     };
 
     loadSpecialties();
   }, []);
+
+  // Limpiar resultados si la búsqueda está vacía
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+    }
+  }, [searchTerm]);
 
   // Manejar búsqueda
   const handleSearch = async (e: React.FormEvent) => {
@@ -169,74 +182,78 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Seccion de Resultados de búsqueda */}
-      {searchResults.length > 0 && (
+      {(isSearching || searchResults.length > 0) && (
         <section id="resultados-busqueda" className="py-5">
           <div className="container">
             <div className="row">
               <div className="col-12">
                 <h2 className="mb-4">
-                  Especialistas recomendados para "{searchTerm}"
+                  {isSearching ? 'Buscando especialistas...' : `Especialistas recomendados para "${searchTerm}"`}
                 </h2>
                 <div className="row g-4">
-                  {searchResults.map((doctor) => (
-                    <div key={doctor.id} className="col-md-12 col-lg-12">
-                      <div className="card h-100">
-                        <div className="card-body">
-                          <div className="d-flex flex-column flex-md-row">
-                            <div className="flex-grow-1 me-md-4">
-                              <div className="d-flex flex-column flex-sm-row align-items-sm-center mb-3">
-                                {doctor.foto_perfil_url && (
-                                  <div className="me-3 mb-2 mb-sm-0" style={{ flexShrink: 0 }}>
-                                    <img
-                                      src={doctor.foto_perfil_url}
-                                      alt={doctor.nombre_completo}
-                                      className="rounded-circle img-fluid"
-                                      style={{ width: '80px', height: '80px', objectFit: 'cover' }}
-                                      loading="lazy"
-                                    />
+                  {isSearching ? (
+                    Array.from({ length: 2 }).map((_, index) => <DoctorCardSkeleton key={index} />)
+                  ) : (
+                    searchResults.map((doctor) => (
+                      <div key={doctor.id} className="col-md-12 col-lg-12">
+                        <div className="card h-100">
+                          <div className="card-body">
+                            <div className="d-flex flex-column flex-md-row">
+                              <div className="flex-grow-1 me-md-4">
+                                <div className="d-flex flex-column flex-sm-row align-items-sm-center mb-3">
+                                  {doctor.foto_perfil_url && (
+                                    <div className="me-3 mb-2 mb-sm-0" style={{ flexShrink: 0 }}>
+                                      <img
+                                        src={doctor.foto_perfil_url}
+                                        alt={doctor.nombre_completo}
+                                        className="rounded-circle img-fluid"
+                                        style={{ width: '80px', height: '80px', objectFit: 'cover' }}
+                                        loading="lazy"
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="text-center text-sm-start">
+                                    <h2 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h2>
+                                    <small className="text-muted">Cédula: {doctor.cedula_profesional}</small>
                                   </div>
+                                </div>
+                                
+                                <div className="mb-1">
+                                  <h6 className="fw-semibold d-inline-block me-2">Especialidades:</h6>
+                                  <div className="d-inline-block">
+                                    {doctor.especialidades.map((esp, index) => (
+                                      <span key={index} className="badge bg-secondary me-1 mb-1">
+                                        {esp}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                
+                                {doctor.biografia && (
+                                  <p className="card-text text-muted medium mb-3 mb-md-0">
+                                    {doctor.biografia.length > 150 
+                                      ? `${doctor.biografia.substring(0, 150)}...` 
+                                      : doctor.biografia
+                                    }
+                                  </p>
                                 )}
-                                <div className="text-center text-sm-start">
-                                  <h2 className="card-title mb-1 text-primary">{doctor.nombre_completo}</h2>
-                                  <small className="text-muted">Cédula: {doctor.cedula_profesional}</small>
-                                </div>
                               </div>
                               
-                              <div className="mb-1">
-                                <h6 className="fw-semibold d-inline-block me-2">Especialidades:</h6>
-                                <div className="d-inline-block">
-                                  {doctor.especialidades.map((esp, index) => (
-                                    <span key={index} className="badge bg-secondary me-1 mb-1">
-                                      {esp}
-                                    </span>
-                                  ))}
-                                </div>
+                              <div className="d-flex flex-column justify-content-center align-items-center align-items-md-end" style={{ minWidth: '140px' }}>
+                                <Link to={`/doctor/${doctor.id}`} className="btn btn-outline-primary btn-sm mb-2 w-100 w-md-auto">
+                                  Ver Perfil
+                                </Link>
+                                <Link to={`/doctor/${doctor.id}?action=book`} className="btn btn-primary btn-sm w-100 w-md-auto">
+                                  <i className="mdi mdi-calendar-plus me-1"></i>
+                                  Reservar
+                                </Link>
                               </div>
-                              
-                              {doctor.biografia && (
-                                <p className="card-text text-muted medium mb-3 mb-md-0">
-                                  {doctor.biografia.length > 150 
-                                    ? `${doctor.biografia.substring(0, 150)}...` 
-                                    : doctor.biografia
-                                  }
-                                </p>
-                              )}
-                            </div>
-                            
-                            <div className="d-flex flex-column justify-content-center align-items-center align-items-md-end" style={{ minWidth: '140px' }}>
-                              <Link to={`/doctor/${doctor.id}`} className="btn btn-outline-primary btn-sm mb-2 w-100 w-md-auto">
-                                Ver Perfil
-                              </Link>
-                              <Link to={`/doctor/${doctor.id}?action=book`} className="btn btn-primary btn-sm w-100 w-md-auto">
-                                <i className="mdi mdi-calendar-plus me-1"></i>
-                                Reservar
-                              </Link>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -276,21 +293,25 @@ const HomePage: React.FC = () => {
                 {/* Cards Section - 6 columns */}
                 <div className="position-relative mx-auto" style={{ zIndex: 2, maxWidth: '800px' }}>
                   <div className="row g-4">
-                    {specialties.map((specialty) => (
-                      <div key={specialty.id} className="col-md-6 col-lg-4">
-                        <div 
-                          className="card h-100 cursor-pointer text-primary backdrop-blur"
-                          onClick={() => handleSpecialtyClick(specialty.nombre)}
-                          style={{ cursor: 'pointer' }}
-                        >
-                          <div className="card-body text-center">
-                            <i className="mdi mdi-medical-bag mdi-xl text-primary mb-2"></i>
-                            <h6 className="card-title">{specialty.nombre}</h6>
-                            <small className="text-primary">Ver especialistas →</small>
+                    {isLoadingSpecialties ? (
+                      Array.from({ length: 6 }).map((_, index) => <SpecialtyCardSkeleton key={index} />)
+                    ) : (
+                      specialties.map((specialty) => (
+                        <div key={specialty.id} className="col-md-6 col-lg-4">
+                          <div 
+                            className="card h-100 cursor-pointer text-primary backdrop-blur"
+                            onClick={() => handleSpecialtyClick(specialty.nombre)}
+                            style={{ cursor: 'pointer' }}
+                          >
+                            <div className="card-body text-center">
+                              <i className="mdi mdi-medical-bag mdi-xl text-primary mb-2"></i>
+                              <h6 className="card-title">{specialty.nombre}</h6>
+                              <small className="text-primary">Ver especialistas →</small>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                   <div className="text-center mt-4">
                     <Link to="/especialidades" className="btn btn-outline-primary">
