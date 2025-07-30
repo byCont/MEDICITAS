@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import type { Doctor, Especialidad, Resena } from '../services/api';
+import type { Doctor, Especialidad } from '../services/api';
 import { doctorService, appointmentService, specialtyService } from '../services/api';
 
 const DoctorProfilePage: React.FC = () => {

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { appointmentService, Cita } from '../services/api';
+import { appointmentService } from '../services/api';
+import type { Cita } from '../services/api';
 
 const MisCitasPage: React.FC = () => {
   const [citas, setCitas] = useState<Cita[]>([]);

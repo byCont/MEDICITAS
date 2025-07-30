@@ -671,7 +671,7 @@ app = FastAPI(
 # Configuración de CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Origen de tu frontend
+    allow_origins=["http://localhost:5173", "https://medicitas-xi.vercel.app"],  # Orígenes de frontend
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

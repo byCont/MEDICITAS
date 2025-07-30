@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { specialtyService, doctorService, Especialidad } from '../services/api';
+import { specialtyService } from '../services/api';
+import type { Especialidad } from '../services/api';
 
 const EspecialidadesPage: React.FC = () => {
   const [specialties, setSpecialties] = useState<Especialidad[]>([]);

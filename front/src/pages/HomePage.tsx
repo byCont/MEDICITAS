@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { specialtyService, doctorService, Doctor, Especialidad } from '../services/api';
+import { Link } from 'react-router-dom';
+import { specialtyService, doctorService } from '../services/api';
+import type { Doctor, Especialidad } from '../services/api';
 import './pages.scss';
 import especialidadesImage from '../assets/images/especialidades.png';
 
@@ -9,7 +10,6 @@ const HomePage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Doctor[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [specialties, setSpecialties] = useState<Especialidad[]>([]);
-  const navigate = useNavigate();
 
   // Cargar especialidades al montar el componente
   useEffect(() => {
