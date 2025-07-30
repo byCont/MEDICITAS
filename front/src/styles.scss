@@ -277,3 +277,38 @@ textarea {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
+
+/* Pagination styles for theme support */
+.pagination {
+  .page-item {
+    .page-link {
+      background-color: var(--bg-solid);
+      border-color: var(--border-level-2);
+      color: var(--text-primary);
+
+      &:hover {
+        background-color: var(--surface-level-3);
+        border-color: var(--border-level-3);
+        color: var(--text-primary);
+      }
+    }
+
+    &.active .page-link {
+      background-color: var(--bs-primary);
+      border-color: var(--bs-primary);
+      color: white;
+
+      &:hover {
+        background-color: var(--bs-primary);
+        border-color: var(--bs-primary);
+        color: white;
+      }
+    }
+
+    &.disabled .page-link {
+      background-color: var(--bg-solid);
+      border-color: var(--border-level-2);
+      color: var(--text-tertiary);
+    }
+  }
+}
