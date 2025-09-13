@@ -1,425 +1,268 @@
 #!/usr/bin/env python3
-# /app/main.py
 """
-Sistema de Autenticación para MediCitas API
-Implementa registro, login, logout y protección de rutas con JWT
+API de Catálogos - Versión de Producción
+Maneja la subida y servicio de archivos estáticos, con CRUD completo.
 """
-
-from fastapi import FastAPI, HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Boolean, Date, SmallInteger, BigInteger, ForeignKey, Enum as SQLEnum, CheckConstraint, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
-from sqlalchemy.sql import func
-from pydantic import BaseModel, EmailStr, validator
-from typing import List, Optional, Union
-from datetime import datetime, date, timedelta
 import os
-from dotenv import load_dotenv
-import enum
-import jwt
-from passlib.context import CryptContext
-from passlib.hash import bcrypt
+import logging
+import json
 import secrets
-import re
+import shutil
+from datetime import datetime
+from typing import List, Optional
 
-# Cargar variables de entorno
+import jwt
+from dotenv import load_dotenv
+from fastapi import (FastAPI, Depends, HTTPException, status, Request,
+                     BackgroundTasks, UploadFile, File, Form)
+from fastapi.security import HTTPBearer
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from passlib.context import CryptContext
+from pydantic import BaseModel, EmailStr
+from sqlalchemy import (create_engine, Column, Integer, String, Text,
+                        DateTime, ForeignKey)
+from sqlalchemy.orm import sessionmaker, Session, relationship, joinedload, declarative_base
+from sqlalchemy.sql import func
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# --- Configuración Inicial ---
 load_dotenv()
 
+# Configuración de logs
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 # Configuración de seguridad
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
+SECRET_KEY = os.getenv("SECRET_KEY", "a_very_secret_key_that_should_be_in_env")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-REFRESH_TOKEN_EXPIRE_DAYS = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # Configuración de la base de datos
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-# Crear el motor de la base de datos
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./catalog_prod.db")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Configuración de encriptación de contraseñas
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configuración del limitador de velocidad
+limiter = Limiter(key_func=get_remote_address)
 
-# Configuración de seguridad JWT
-security = HTTPBearer()
+# Paths para archivos
+JSON_OUTPUT_PATH = "sync/catalog.json"
+STATIC_DIR = "static"
+CATALOGS_DIR = os.path.join(STATIC_DIR, "catalogs")
 
-# Definir ENUMs
-class TipoRol(str, enum.Enum):
-    PACIENTE = "Paciente"
-    DOCTOR = "Doctor"
-    ADMINISTRADOR = "Administrador"
-
-class EstadoCita(str, enum.Enum):
-    PROGRAMADA = "Programada"
-    CONFIRMADA = "Confirmada"
-    COMPLETADA = "Completada"
-    CANCELADA = "Cancelada"
-    NO_ASISTIO = "No Asistió"
-
-class TipoNotificacion(str, enum.Enum):
-    EMAIL = "Email"
-    SMS = "SMS"
-    PUSH = "Push"
-
-class EventoNotificacion(str, enum.Enum):
-    CITA_PROGRAMADA = "Cita_Programada"
-    CITA_CONFIRMADA = "Cita_Confirmada"
-    CITA_CANCELADA = "Cita_Cancelada"
-    RECORDATORIO_24H = "Recordatorio_24h"
-    RECORDATORIO_1H = "Recordatorio_1h"
-
-# Modelos SQLAlchemy (actualizados con campos de autenticación)
-class Usuario(Base):
-    __tablename__ = "usuarios"
-    
+# --- Modelos SQLAlchemy (Flexibles) ---
+class User(Base):
+    __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    nombre_completo = Column(String(150), nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    telefono = Column(String(20))
-    fecha_nacimiento = Column(Date)
-    rol = Column(SQLEnum(TipoRol), nullable=False)
-    activo = Column(Boolean, default=True)
-    email_verificado = Column(Boolean, default=False)
-    ultimo_acceso = Column(DateTime(timezone=True))
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
-    fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
-    # Relaciones
-    perfil_doctor = relationship("PerfilDoctor", back_populates="usuario", uselist=False, cascade="all, delete-orphan")
-    citas_como_paciente = relationship("Cita", foreign_keys="Cita.paciente_id", back_populates="paciente")
-    resenas = relationship("Resena", back_populates="paciente")
-    notificaciones = relationship("Notificacion", back_populates="usuario")
-    tokens_refresh = relationship("RefreshToken", back_populates="usuario", cascade="all, delete-orphan")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-class RefreshToken(Base):
-    __tablename__ = "refresh_tokens"
-    
+class Line(Base):
+    __tablename__ = "lines"
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False)
-    token = Column(String(255), unique=True, nullable=False, index=True)
-    fecha_expiracion = Column(DateTime(timezone=True), nullable=False)
-    activo = Column(Boolean, default=True)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Relaciones
-    usuario = relationship("Usuario", back_populates="tokens_refresh")
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    brands = relationship("Brand", back_populates="line", cascade="all, delete-orphan")
+    categories = relationship("Category", back_populates="line", cascade="all, delete-orphan")
+    catalogs = relationship("Catalog", back_populates="line", cascade="all, delete-orphan")
 
-class Especialidad(Base):
-    __tablename__ = "especialidades"
-    
+class Category(Base):
+    __tablename__ = "categories"
     id = Column(Integer, primary_key=True, index=True)
-    nombre = Column(String(100), unique=True, nullable=False)
-    descripcion = Column(Text)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Relaciones
-    doctor_especialidades = relationship("DoctorEspecialidad", back_populates="especialidad")
-    citas = relationship("Cita", back_populates="especialidad")
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    line_id = Column(Integer, ForeignKey("lines.id"), nullable=False)
+    line = relationship("Line", back_populates="categories")
+    subcategories = relationship("Subcategory", back_populates="category", cascade="all, delete-orphan")
+    brands = relationship("Brand", back_populates="category", cascade="all, delete-orphan")
+    catalogs = relationship("Catalog", back_populates="category", cascade="all, delete-orphan")
 
-class PerfilDoctor(Base):
-    __tablename__ = "perfiles_doctores"
-    
+class Subcategory(Base):
+    __tablename__ = "subcategories"
     id = Column(Integer, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), unique=True, nullable=False)
-    cedula_profesional = Column(String(50), unique=True, nullable=False)
-    biografia = Column(Text)
-    foto_perfil_url = Column(String(255))
-    fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
-    # Relaciones
-    usuario = relationship("Usuario", back_populates="perfil_doctor")
-    especialidades = relationship("DoctorEspecialidad", back_populates="doctor", cascade="all, delete-orphan")
-    citas = relationship("Cita", back_populates="doctor")
-    resenas = relationship("Resena", back_populates="doctor")
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    category = relationship("Category", back_populates="subcategories")
+    brands = relationship("Brand", back_populates="subcategory", cascade="all, delete-orphan")
+    catalogs = relationship("Catalog", back_populates="subcategory", cascade="all, delete-orphan")
 
-class DoctorEspecialidad(Base):
-    __tablename__ = "doctor_especialidades"
-    
-    doctor_id = Column(Integer, ForeignKey("perfiles_doctores.id", ondelete="CASCADE"), primary_key=True)
-    especialidad_id = Column(Integer, ForeignKey("especialidades.id", ondelete="CASCADE"), primary_key=True)
-    
-    # Relaciones
-    doctor = relationship("PerfilDoctor", back_populates="especialidades")
-    especialidad = relationship("Especialidad", back_populates="doctor_especialidades")
-
-class Cita(Base):
-    __tablename__ = "citas"
-    
+class Brand(Base):
+    __tablename__ = "brands"
     id = Column(Integer, primary_key=True, index=True)
-    paciente_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"))
-    doctor_id = Column(Integer, ForeignKey("perfiles_doctores.id", ondelete="CASCADE"), nullable=False)
-    especialidad_id = Column(Integer, ForeignKey("especialidades.id", ondelete="RESTRICT"), nullable=False)
-    fecha_hora = Column(DateTime(timezone=True), nullable=False)
-    duracion_minutos = Column(Integer, nullable=False, default=30)
-    estado = Column(SQLEnum(EstadoCita), nullable=False, default=EstadoCita.PROGRAMADA)
-    motivo_consulta = Column(Text)
-    notas_doctor = Column(Text)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
-    fecha_actualizacion = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-    
-    # Restricciones
-    __table_args__ = (
-        UniqueConstraint('doctor_id', 'fecha_hora', name='uq_doctor_fecha_hora'),
-    )
-    
-    # Relaciones
-    paciente = relationship("Usuario", foreign_keys=[paciente_id], back_populates="citas_como_paciente")
-    doctor = relationship("PerfilDoctor", back_populates="citas")
-    especialidad = relationship("Especialidad", back_populates="citas")
-    resena = relationship("Resena", back_populates="cita", uselist=False)
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    line_id = Column(Integer, ForeignKey("lines.id"), nullable=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    subcategory_id = Column(Integer, ForeignKey("subcategories.id"), nullable=True)
+    line = relationship("Line", back_populates="brands")
+    category = relationship("Category", back_populates="brands")
+    subcategory = relationship("Subcategory", back_populates="brands")
+    catalogs = relationship("Catalog", back_populates="brand", cascade="all, delete-orphan")
 
-class Resena(Base):
-    __tablename__ = "resenas"
-    
+class Catalog(Base):
+    __tablename__ = "catalogs"
     id = Column(Integer, primary_key=True, index=True)
-    cita_id = Column(Integer, ForeignKey("citas.id", ondelete="CASCADE"), unique=True, nullable=False)
-    paciente_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("perfiles_doctores.id"), nullable=False)
-    calificacion = Column(SmallInteger, nullable=False)
-    comentario = Column(Text)
-    es_anonima = Column(Boolean, default=False)
-    fecha_creacion = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Restricciones
-    __table_args__ = (
-        CheckConstraint('calificacion >= 1 AND calificacion <= 5', name='check_calificacion_range'),
-    )
-    
-    # Relaciones
-    cita = relationship("Cita", back_populates="resena")
-    paciente = relationship("Usuario", back_populates="resenas")
-    doctor = relationship("PerfilDoctor", back_populates="resenas")
+    name = Column(String(100), nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    file_path = Column(String(255), nullable=True)
+    line_id = Column(Integer, ForeignKey("lines.id"), nullable=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    subcategory_id = Column(Integer, ForeignKey("subcategories.id"), nullable=True)
+    brand_id = Column(Integer, ForeignKey("brands.id"), nullable=True)
+    line = relationship("Line", back_populates="catalogs")
+    category = relationship("Category", back_populates="catalogs")
+    subcategory = relationship("Subcategory", back_populates="catalogs")
+    brand = relationship("Brand", back_populates="catalogs")
 
-class Notificacion(Base):
-    __tablename__ = "notificaciones"
-    
-    id = Column(BigInteger, primary_key=True, index=True)
-    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
-    cita_id = Column(Integer, ForeignKey("citas.id"))
-    tipo = Column(SQLEnum(TipoNotificacion), nullable=False)
-    evento = Column(SQLEnum(EventoNotificacion), nullable=False)
-    contenido = Column(Text, nullable=False)
-    enviada_exitosamente = Column(Boolean, default=False)
-    fecha_envio = Column(DateTime(timezone=True), server_default=func.now())
-    
-    # Relaciones
-    usuario = relationship("Usuario", back_populates="notificaciones")
+# --- Modelos Pydantic (Schemas) ---
 
-# Crear las tablas
-Base.metadata.create_all(bind=engine)
+# Schemas para el JSON público
+class CatalogPublic(BaseModel):
+    id: int
+    name: str
+    file_path: Optional[str] = None
+    file_url: Optional[str] = None
+    class Config: from_attributes = True
 
-# Utilidades de autenticación
-class PasswordUtils:
-    """Utilidades para manejo de contraseñas"""
-    
-    @staticmethod
-    def hash_password(password: str) -> str:
-        """Encriptar contraseña"""
-        return pwd_context.hash(password)
-    
-    @staticmethod
-    def verify_password(plain_password: str, hashed_password: str) -> bool:
-        """Verificar contraseña"""
-        return pwd_context.verify(plain_password, hashed_password)
-    
-    @staticmethod
-    def validate_password_strength(password: str) -> bool:
-        """Validar fortaleza de contraseña"""
-        if len(password) < 8:
-            return False
-        if not re.search(r"[A-Z]", password):
-            return False
-        if not re.search(r"[a-z]", password):
-            return False
-        if not re.search(r"\d", password):
-            return False
-        return True
+class BrandPublic(BaseModel):
+    id: int
+    name: str
+    catalogs: List[CatalogPublic] = []
+    class Config: from_attributes = True
 
-class JWTUtils:
-    """Utilidades para manejo de JWT"""
-    
-    @staticmethod
-    def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-        """Crear token de acceso JWT"""
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        
-        to_encode.update({"exp": expire, "type": "access"})
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
-    @staticmethod
-    def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-        """Crear token de refresco"""
-        to_encode = data.copy()
-        if expires_delta:
-            expire = datetime.utcnow() + expires_delta
-        else:
-            expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        
-        to_encode.update({"exp": expire, "type": "refresh"})
-        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    
-    @staticmethod
-    def decode_token(token: str) -> dict:
-        """Decodificar token JWT"""
-        try:
-            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-            return payload
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token expirado"
-            )
-        except jwt.JWTError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido"
-            )
+class SubcategoryPublic(BaseModel):
+    id: int
+    name: str
+    brands: List[BrandPublic] = []
+    catalogs: List[CatalogPublic] = []
+    class Config: from_attributes = True
 
-# --- INICIO: Modelos Pydantic para Registro ---
+class CategoryPublic(BaseModel):
+    id: int
+    name: str
+    subcategories: List[SubcategoryPublic] = []
+    brands: List[BrandPublic] = []
+    catalogs: List[CatalogPublic] = []
+    class Config: from_attributes = True
 
-# Modelo base para datos de usuario
-class UsuarioBase(BaseModel):
-    nombre_completo: str
-    email: EmailStr
-    password: str
-    telefono: Optional[str] = None
-    fecha_nacimiento: Optional[date] = None
+class LinePublic(BaseModel):
+    id: int
+    name: str
+    categories: List[CategoryPublic] = []
+    brands: List[BrandPublic] = []
+    catalogs: List[CatalogPublic] = []
+    class Config: from_attributes = True
 
-    @validator('password')
-    def validate_password(cls, v):
-        if not PasswordUtils.validate_password_strength(v):
-            raise ValueError('La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas y números')
-        return v
-
-    @validator('nombre_completo')
-    def validate_nombre(cls, v):
-        if len(v.strip()) < 2:
-            raise ValueError('El nombre completo debe tener al menos 2 caracteres')
-        return v.strip()
-
-# Modelo para registro de paciente
-class UsuarioRegistro(UsuarioBase):
-    rol: TipoRol = TipoRol.PACIENTE
-
-# Modelo para datos del perfil del doctor
-class PerfilDoctorCrear(BaseModel):
-    cedula_profesional: str
-    biografia: Optional[str] = None
-    foto_perfil_url: Optional[str] = None
-
-# Modelo para registro de doctor (combina usuario, perfil y especialidades)
-class DoctorRegistro(BaseModel):
-    usuario: UsuarioBase
-    perfil: PerfilDoctorCrear
-    especialidades_ids: List[int]
-
-# --- FIN: Modelos Pydantic para Registro ---
-
-class UsuarioLogin(BaseModel):
+# Schemas para Autenticación
+class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
 class Token(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
-    expires_in: int = ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
-class TokenRefresh(BaseModel):
-    refresh_token: str
+# Schemas para CRUD (Entrada)
+class CategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    line_id: int
 
-class UsuarioResponse(BaseModel):
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class SubcategoryCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    category_id: int
+
+class SubcategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class BrandCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    line_id: Optional[int] = None
+    category_id: Optional[int] = None
+    subcategory_id: Optional[int] = None
+
+class BrandUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class CatalogUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+# Schemas para CRUD (Respuesta)
+class CatalogResponse(BaseModel):
     id: int
-    nombre_completo: str
-    email: str
-    telefono: Optional[str]
-    fecha_nacimiento: Optional[date]
-    rol: TipoRol
-    activo: bool
-    email_verificado: bool
-    ultimo_acceso: Optional[datetime]
-    fecha_creacion: datetime
+    name: str
+    description: Optional[str] = None
+    file_path: Optional[str] = None
+    line_id: Optional[int] = None
+    category_id: Optional[int] = None
+    subcategory_id: Optional[int] = None
+    brand_id: Optional[int] = None
+    class Config: from_attributes = True
+
+class BrandResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    line_id: Optional[int] = None
+    category_id: Optional[int] = None
+    subcategory_id: Optional[int] = None
+    class Config: from_attributes = True
     
-    class Config:
-        from_attributes = True
-
-# --- INICIO: Modelos de Respuesta para Doctor ---
-class EspecialidadResponse(BaseModel):
+class SubcategoryResponse(BaseModel):
     id: int
-    nombre: str
+    name: str
+    description: Optional[str] = None
+    category_id: int
+    class Config: from_attributes = True
 
-    class Config:
-        from_attributes = True
-
-class PerfilDoctorResponse(BaseModel):
+class CategoryResponse(BaseModel):
     id: int
-    cedula_profesional: str
-    biografia: Optional[str]
-    foto_perfil_url: Optional[str]
+    name: str
+    description: Optional[str] = None
+    line_id: int
+    class Config: from_attributes = True
 
-    class Config:
-        from_attributes = True
+# --- Inicialización de FastAPI ---
+app = FastAPI(
+    title="API de Catálogos",
+    description="Una API para gestionar un sistema de catálogos jerárquico, con CRUD completo.",
+    version="3.1.0"
+)
 
-class DoctorResponse(UsuarioResponse):
-    perfil_doctor: PerfilDoctorResponse
-    especialidades: List[EspecialidadResponse]
-
-    class Config:
-        from_attributes = True
-# --- FIN: Modelos de Respuesta para Doctor ---
+# Montar directorio estático
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount(f"/{STATIC_DIR}", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-class UsuarioActual(BaseModel):
-    id: int
-    email: str
-    rol: TipoRol
-    activo: bool
+# Middlewares
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-class CitaCrear(BaseModel):
-    doctor_id: int
-    especialidad_id: int
-    fecha_hora: datetime
-    motivo_consulta: Optional[str] = None
-    duracion_minutos: int = 30
-
-    @validator('fecha_hora')
-    def validate_fecha_hora(cls, v):
-        if v.tzinfo is None:
-             v = v.replace(tzinfo=datetime.now().astimezone().tzinfo)
-
-        if v <= datetime.now().astimezone():
-            raise ValueError('La fecha y hora de la cita debe ser en el futuro.')
-        
-        if v.minute not in [0, 30]:
-            raise ValueError('Las citas solo pueden programarse a en punto (00) o y media (30).')
-        
-        return v
-
-class CitaResponse(BaseModel):
-    id: int
-    paciente_id: int
-    doctor_id: int
-    especialidad_id: int
-    fecha_hora: datetime
-    duracion_minutos: int
-    estado: EstadoCita
-    motivo_consulta: Optional[str]
-    fecha_creacion: datetime
-
-    class Config:
-        from_attributes = True
-
-# Dependencia para obtener la sesión de la base de datos
+# --- Dependencias ---
 def get_db():
     db = SessionLocal()
     try:
@@ -427,507 +270,355 @@ def get_db():
     finally:
         db.close()
 
-# Servicios de autenticación
-class AuthService:
-    """Servicio de autenticación"""
-    
-    @staticmethod
-    def authenticate_user(db: Session, email: str, password: str) -> Optional[Usuario]:
-        """Autenticar usuario"""
-        user = db.query(Usuario).filter(Usuario.email == email).first()
-        if not user or not user.activo or not PasswordUtils.verify_password(password, user.password_hash):
-            return None
-        return user
-    
-    @staticmethod
-    def create_user(db: Session, user_data: UsuarioRegistro) -> Usuario:
-        """Crear nuevo usuario PACIENTE"""
-        if db.query(Usuario).filter(Usuario.email == user_data.email).first():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="El email ya está registrado"
-            )
-        
-        hashed_password = PasswordUtils.hash_password(user_data.password)
-        db_user = Usuario(
-            **user_data.model_dump(exclude={"password", "rol"}),
-            password_hash=hashed_password,
-            rol=TipoRol.PACIENTE
-        )
-        
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
-
-    @staticmethod
-    def create_doctor(db: Session, doctor_data: DoctorRegistro) -> Usuario:
-        """Crear un nuevo usuario DOCTOR con su perfil y especialidades"""
-        # Validar duplicados
-        if db.query(Usuario).filter(Usuario.email == doctor_data.usuario.email).first():
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El email ya está registrado.")
-        
-        if db.query(PerfilDoctor).filter(PerfilDoctor.cedula_profesional == doctor_data.perfil.cedula_profesional).first():
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="La cédula profesional ya está registrada.")
-
-        # Validar que las especialidades existan
-        if not doctor_data.especialidades_ids:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Debe proporcionar al menos una especialidad.")
-            
-        especialidades_validas = db.query(Especialidad).filter(Especialidad.id.in_(doctor_data.especialidades_ids)).all()
-        if len(especialidades_validas) != len(doctor_data.especialidades_ids):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Una o más especialidades no son válidas.")
-
-        # Iniciar transacción
-        try:
-            # 1. Crear el usuario
-            hashed_password = PasswordUtils.hash_password(doctor_data.usuario.password)
-            db_user = Usuario(
-                **doctor_data.usuario.model_dump(exclude={"password"}),
-                password_hash=hashed_password,
-                rol=TipoRol.DOCTOR
-            )
-            db.add(db_user)
-            db.flush() # Para obtener el ID del usuario antes del commit
-
-            # 2. Crear el perfil del doctor
-            db_perfil = PerfilDoctor(
-                **doctor_data.perfil.model_dump(),
-                usuario_id=db_user.id
-            )
-            db.add(db_perfil)
-            db.flush() # Para obtener el ID del perfil antes del commit
-
-            # 3. Asociar especialidades
-            for esp_id in doctor_data.especialidades_ids:
-                db_doc_esp = DoctorEspecialidad(doctor_id=db_perfil.id, especialidad_id=esp_id)
-                db.add(db_doc_esp)
-
-            db.commit()
-            db.refresh(db_user)
-            
-            # Cargar las relaciones para la respuesta
-            db.refresh(db_user.perfil_doctor)
-            for de in db_user.perfil_doctor.especialidades:
-                db.refresh(de.especialidad)
-
-            return db_user
-        except Exception as e:
-            db.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error al crear el doctor: {e}"
-            )
-    
-    @staticmethod
-    def create_tokens(db: Session, user: Usuario) -> Token:
-        """Crear tokens de acceso y refresco"""
-        access_token = JWTUtils.create_access_token(
-            data={"sub": user.email, "user_id": user.id, "role": user.rol.value}
-        )
-        refresh_token = JWTUtils.create_refresh_token(
-            data={"sub": user.email, "user_id": user.id}
-        )
-        
-        db_refresh_token = RefreshToken(
-            usuario_id=user.id,
-            token=refresh_token,
-            fecha_expiracion=datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        )
-        db.add(db_refresh_token)
-        
-        user.ultimo_acceso = func.now()
-        db.commit()
-        
-        return Token(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        )
-    
-    @staticmethod
-    def refresh_access_token(db: Session, refresh_token: str) -> Token:
-        """Refrescar token de acceso"""
-        db_token = db.query(RefreshToken).filter(
-            RefreshToken.token == refresh_token,
-            RefreshToken.activo == True,
-            RefreshToken.fecha_expiracion > datetime.utcnow()
-        ).first()
-        
-        if not db_token:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token inválido o expirado"
-            )
-        
-        try:
-            payload = JWTUtils.decode_token(refresh_token)
-            if payload.get("type") != "refresh":
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Tipo de token inválido"
-                )
-        except HTTPException:
-            db_token.activo = False
-            db.commit()
-            raise
-        
-        user = db.query(Usuario).filter(Usuario.id == payload.get("user_id")).first()
-        if not user or not user.activo:
-            db_token.activo = False
-            db.commit()
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Usuario no válido"
-            )
-        
-        new_access_token = JWTUtils.create_access_token(
-            data={"sub": user.email, "user_id": user.id, "role": user.rol.value}
-        )
-        
-        return Token(
-            access_token=new_access_token,
-            refresh_token=refresh_token,
-            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        )
-    
-    @staticmethod
-    def logout_user(db: Session, refresh_token: str) -> bool:
-        """Cerrar sesión de usuario"""
-        db_token = db.query(RefreshToken).filter(
-            RefreshToken.token == refresh_token,
-            RefreshToken.activo == True
-        ).first()
-        
-        if db_token:
-            db_token.activo = False
-            db.commit()
-            return True
-        return False
-
-# Dependencias de autenticación
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> Usuario:
-    """Obtener usuario actual a partir del token"""
-    token = credentials.credentials
-    
+def get_current_user(token: str = Depends(HTTPBearer()), db: Session = Depends(get_db)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload = JWTUtils.decode_token(token)
-        if payload.get("type") != "access":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Tipo de token inválido"
-            )
-        
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
-        user_id: int = payload.get("user_id")
-        
-        if email is None or user_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido"
-            )
-    except HTTPException:
-        raise
-    
-    user = db.query(Usuario).filter(Usuario.id == user_id).first()
-    if user is None or not user.activo:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuario no encontrado o inactivo"
-        )
-    
+        if email is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
     return user
 
-def get_current_active_user(current_user: Usuario = Depends(get_current_user)) -> Usuario:
-    """Verificar que el usuario esté activo"""
-    if not current_user.activo:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Usuario inactivo"
-        )
-    return current_user
-
-def require_role(allowed_roles: List[TipoRol]):
-    """Decorador para requerir roles específicos"""
-    def role_checker(current_user: Usuario = Depends(get_current_active_user)):
-        if current_user.rol not in allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="No tienes permisos para acceder a este recurso"
-            )
-        return current_user
-    return role_checker
-
-# Inicializar FastAPI
-app = FastAPI(
-    title="MediCitas API con Autenticación",
-    description="Especialistas para ti, cuando lo necesitas.",
-    version="2.1.0"
-)
-
-# Configuración de CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://medicitas-xi.vercel.app"],  # Orígenes de frontend
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# --- INICIO: Rutas de Autenticación y Registro ---
-
-@app.post("/auth/registro/paciente", response_model=UsuarioResponse, status_code=status.HTTP_201_CREATED, tags=["Autenticación"])
-def registrar_paciente(user_data: UsuarioRegistro, db: Session = Depends(get_db)):
-    """Registrar un nuevo usuario con el rol de Paciente."""
+# --- Lógica de Negocio ---
+def generate_public_json(db: Session, request: Request):
+    logger.info("Iniciando la generación del archivo catalog.json...")
     try:
-        user = AuthService.create_user(db, user_data)
-        return user
-    except HTTPException:
-        raise
+        lines = db.query(Line).options(
+            joinedload(Line.catalogs),
+            joinedload(Line.brands).joinedload(Brand.catalogs),
+            joinedload(Line.categories).joinedload(Category.catalogs),
+            joinedload(Line.categories).joinedload(Category.brands).joinedload(Brand.catalogs),
+            joinedload(Line.categories).joinedload(Category.subcategories).joinedload(Subcategory.catalogs),
+            joinedload(Line.categories).joinedload(Category.subcategories).joinedload(Subcategory.brands).joinedload(Brand.catalogs)
+        ).order_by(Line.id).all()
+        
+        validated_lines = [LinePublic.model_validate(line) for line in lines]
+        
+        def build_urls(item: dict):
+            if "file_path" in item and item["file_path"]:
+                item["file_url"] = str(request.base_url.replace(path=item["file_path"]))
+            
+            for key, value in item.items():
+                if isinstance(value, list):
+                    for sub_item in value:
+                        if isinstance(sub_item, dict):
+                            build_urls(sub_item)
+
+        result_lines = [line.model_dump() for line in validated_lines]
+        for line_dict in result_lines:
+            build_urls(line_dict)
+
+        os.makedirs(os.path.dirname(JSON_OUTPUT_PATH), exist_ok=True)
+        
+        with open(JSON_OUTPUT_PATH, "w", encoding="utf-8") as f:
+            json.dump({"lines": result_lines}, f, indent=4, ensure_ascii=False)
+        
+        logger.info(f"✅ Archivo {JSON_OUTPUT_PATH} generado exitosamente.")
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor: {str(e)}"
-        )
+        logger.error(f"❌ Error al generar el JSON público: {e}")
 
-@app.post("/auth/registro/doctor", status_code=status.HTTP_201_CREATED, tags=["Autenticación"])
-def registrar_doctor(doctor_data: DoctorRegistro, db: Session = Depends(get_db)):
-    """Registrar un nuevo usuario Doctor, incluyendo su perfil y especialidades."""
-    try:
-        doctor = AuthService.create_doctor(db, doctor_data)
-        
-        # Construir la respuesta manualmente para asegurar que todo se cargue
-        especialidades_resp = [EspecialidadResponse.model_validate(de.especialidad) for de in doctor.perfil_doctor.especialidades]
-        
-        perfil_resp = PerfilDoctorResponse.model_validate(doctor.perfil_doctor)
+# --- Endpoints ---
 
-        # Crear un diccionario con los datos del doctor excluyendo perfil_doctor
-        doctor_dict = {k: v for k, v in doctor.__dict__.items() if k != 'perfil_doctor'}
-        
-        # Usar el modelo de respuesta DoctorResponse
-        return DoctorResponse(
-            **doctor_dict,
-            perfil_doctor=perfil_resp,
-            especialidades=especialidades_resp
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error interno del servidor al registrar doctor: {str(e)}"
-        )
-
-
-@app.post("/auth/login", response_model=Token, tags=["Autenticación"])
-def iniciar_sesion(user_credentials: UsuarioLogin, db: Session = Depends(get_db)):
-    """Iniciar sesión de usuario"""
-    user = AuthService.authenticate_user(db, user_credentials.email, user_credentials.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email o contraseña incorrectos",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    return AuthService.create_tokens(db, user)
-
-@app.post("/auth/refresh", response_model=Token, tags=["Autenticación"])
-def refrescar_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
-    """Refrescar token de acceso"""
-    return AuthService.refresh_access_token(db, token_data.refresh_token)
-
-@app.post("/auth/logout", tags=["Autenticación"])
-def cerrar_sesion(token_data: TokenRefresh, db: Session = Depends(get_db)):
-    """Cerrar sesión de usuario"""
-    success = AuthService.logout_user(db, token_data.refresh_token)
-    if success:
-        return {"message": "Sesión cerrada exitosamente"}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token de refresco inválido"
-        )
-
-@app.get("/auth/me", response_model=UsuarioResponse, tags=["Autenticación"])
-def obtener_usuario_actual(current_user: Usuario = Depends(get_current_active_user)):
-    """Obtener información del usuario actual"""
-    return current_user
-
-# --- FIN: Rutas de Autenticación y Registro ---
-
-
-# Rutas públicas (sin autenticación)
+# Endpoints Públicos
 @app.get("/", tags=["General"])
-def root():
-    return {
-        "message": "Bienvenido a MediCitas API",
-        "slogan": "Especialistas para ti, cuando lo necesitas.",
-        "version": "2.1.0",
-        "auth_enabled": True
-    }
+@limiter.limit("10/minute")
+def read_root(request: Request):
+    return {"message": "Bienvenido a la API de Catálogos"}
 
 @app.get("/health", tags=["General"])
-def health_check(db: Session = Depends(get_db)):
-    """Verificar la conexión a la base de datos"""
+@limiter.limit("10/minute")
+def health_check(request: Request, db: Session = Depends(get_db)):
     try:
-        from sqlalchemy import text
         db.execute(text("SELECT 1"))
-        return {"status": "healthy", "database": "connected"}
+        return {"status": "ok", "database": "connected"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database connection failed: {e}")
+        raise HTTPException(status_code=503, detail=f"Error de base de datos: {e}")
 
+@app.get("/catalog.json", tags=["General"])
+@limiter.limit("20/minute")
+def get_public_catalog(request: Request):
+    if not os.path.exists(JSON_OUTPUT_PATH):
+        db = SessionLocal()
+        try:
+            generate_public_json(db, request)
+        finally:
+            db.close()
+        
+        if not os.path.exists(JSON_OUTPUT_PATH):
+             raise HTTPException(status_code=404, detail="El archivo de catálogo no pudo ser generado.")
 
-@app.get("/especialidades/", tags=["General"])
-def obtener_especialidades_publicas(db: Session = Depends(get_db)):
-    """Obtener lista de especialidades (público)"""
-    especialidades = db.query(Especialidad).all()
-    return especialidades
+    with open(JSON_OUTPUT_PATH, "r", encoding="utf-8") as f:
+        content = json.load(f)
+    return JSONResponse(content=content)
 
-# Rutas protegidas (requieren autenticación)
-@app.get("/usuarios/", response_model=List[UsuarioResponse], tags=["Administración"])
-def obtener_usuarios(
-    skip: int = 0, 
-    limit: int = 100, 
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(require_role([TipoRol.ADMINISTRADOR]))
-):
-    """Obtener lista de usuarios (solo administradores)"""
-    usuarios = db.query(Usuario).offset(skip).limit(limit).all()
-    return usuarios
-
-@app.get("/stats", tags=["Administración"])
-def obtener_estadisticas(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(require_role([TipoRol.ADMINISTRADOR]))
-):
-    """Obtener estadísticas del sistema (solo administradores)"""
-    try:
-        stats = {
-            "usuarios_total": db.query(Usuario).count(),
-            "pacientes": db.query(Usuario).filter(Usuario.rol == TipoRol.PACIENTE).count(),
-            "doctores": db.query(Usuario).filter(Usuario.rol == TipoRol.DOCTOR).count(),
-            "administradores": db.query(Usuario).filter(Usuario.rol == TipoRol.ADMINISTRADOR).count(),
-            "especialidades": db.query(Especialidad).count(),
-            "citas_total": db.query(Cita).count(),
-            "resenas_total": db.query(Resena).count(),
-        }
-        return stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener estadísticas: {str(e)}")
-
-@app.get("/doctores/", tags=["Doctores"])
-def obtener_doctores(
-    db: Session = Depends(get_db)
-):
-    """Obtener lista de doctores (pública)"""
-    doctores = db.query(PerfilDoctor).all()
-    resultado = []
-    
-    for doctor in doctores:
-        especialidades = [de.especialidad.nombre for de in doctor.especialidades]
-        resultado.append({
-            "id": doctor.id,
-            "nombre_completo": doctor.usuario.nombre_completo,
-            "email": doctor.usuario.email,
-            "telefono": doctor.usuario.telefono,
-            "cedula_profesional": doctor.cedula_profesional,
-            "biografia": doctor.biografia,
-            "foto_perfil_url": doctor.foto_perfil_url,
-            "especialidades": especialidades
-        })
-    
-    return resultado
-
-@app.get("/mis-citas/", response_model=List[CitaResponse], tags=["Citas"])
-def obtener_mis_citas(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
-):
-    """Obtener citas del usuario actual"""
-    if current_user.rol == TipoRol.PACIENTE:
-        citas = db.query(Cita).filter(Cita.paciente_id == current_user.id).all()
-    elif current_user.rol == TipoRol.DOCTOR:
-        doctor_perfil = db.query(PerfilDoctor).filter(PerfilDoctor.usuario_id == current_user.id).first()
-        if doctor_perfil:
-            citas = db.query(Cita).filter(Cita.doctor_id == doctor_perfil.id).all()
-        else:
-            citas = []
-    else: # Administradores pueden ver todas las citas
-        citas = db.query(Cita).all()
-    
-    return citas
-
-@app.post("/citas/", response_model=CitaResponse, status_code=status.HTTP_201_CREATED, tags=["Citas"])
-def crear_cita(
-    cita_data: CitaCrear,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
-):
-    """
-    Crear una nueva cita.
-    - Un PACIENTE puede crear una cita para sí mismo.
-    """
-    if current_user.rol != TipoRol.PACIENTE:
+# Endpoints de Autenticación
+@app.post("/auth/login", response_model=Token, tags=["Autenticación"])
+@limiter.limit("5/minute")
+def login_for_access_token(request: Request, form_data: UserLogin, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == form_data.email).first()
+    if not user or not pwd_context.verify(form_data.password, user.password_hash):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo los pacientes pueden crear nuevas citas."
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email o contraseña incorrecta",
         )
-
-    doctor_perfil = db.query(PerfilDoctor).join(Usuario).filter(
-        PerfilDoctor.id == cita_data.doctor_id,
-        Usuario.activo == True
-    ).first()
-    if not doctor_perfil:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Doctor no encontrado o inactivo.")
-
-    especialidad = db.query(Especialidad).filter(Especialidad.id == cita_data.especialidad_id).first()
-    if not especialidad:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Especialidad no encontrada.")
-
-    doctor_especialidad = db.query(DoctorEspecialidad).filter(
-        DoctorEspecialidad.doctor_id == cita_data.doctor_id,
-        DoctorEspecialidad.especialidad_id == cita_data.especialidad_id
-    ).first()
-    if not doctor_especialidad:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="El doctor seleccionado no ofrece la especialidad indicada.")
-
-    cita_existente = db.query(Cita).filter(
-        Cita.doctor_id == cita_data.doctor_id,
-        Cita.fecha_hora == cita_data.fecha_hora
-    ).first()
-    if cita_existente:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El doctor ya tiene una cita programada en este horario.")
-
-    nueva_cita = Cita(
-        paciente_id=current_user.id,
-        **cita_data.model_dump(),
-        estado=EstadoCita.PROGRAMADA
+    access_token = jwt.encode(
+        {"sub": user.email}, SECRET_KEY, algorithm=ALGORITHM
     )
+    return {"access_token": access_token, "token_type": "bearer"}
 
-    db.add(nueva_cita)
+# --- START: CRUD Endpoints Protegidos ---
+
+# CRUD para Líneas (Solo lectura)
+@app.get("/lines", response_model=List[LinePublic], tags=["Administración - Líneas"])
+def get_lines(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return db.query(Line).all()
+
+@app.get("/lines/{line_id}", response_model=LinePublic, tags=["Administración - Líneas"])
+def get_line(line_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_line = db.query(Line).filter(Line.id == line_id).first()
+    if not db_line:
+        raise HTTPException(status_code=404, detail="Línea no encontrada")
+    return db_line
+
+# CRUD para Categorías
+@app.post("/categories", response_model=CategoryResponse, status_code=status.HTTP_201_CREATED, tags=["Administración - Categorías"])
+def create_category(category: CategoryCreate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_category = Category(**category.model_dump())
+    db.add(db_category)
     db.commit()
-    db.refresh(nueva_cita)
+    db.refresh(db_category)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_category
 
-    return nueva_cita
+@app.get("/categories", response_model=List[CategoryResponse], tags=["Administración - Categorías"])
+def get_categories(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return db.query(Category).all()
 
+@app.get("/categories/{category_id}", response_model=CategoryResponse, tags=["Administración - Categorías"])
+def get_category(category_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    return db_category
 
-# Middleware de manejo de errores
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "error": True,
-            "message": exc.detail,
-            "status_code": exc.status_code
-        }
+@app.put("/categories/{category_id}", response_model=CategoryResponse, tags=["Administración - Categorías"])
+def update_category(category_id: int, category_data: CategoryUpdate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    for key, value in category_data.model_dump(exclude_unset=True).items():
+        setattr(db_category, key, value)
+    db.commit()
+    db.refresh(db_category)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_category
+
+@app.delete("/categories/{category_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Administración - Categorías"])
+def delete_category(category_id: int, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_category = db.query(Category).filter(Category.id == category_id).first()
+    if not db_category:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    db.delete(db_category)
+    db.commit()
+    background_tasks.add_task(generate_public_json, db, request)
+    return
+
+# CRUD para Subcategorías
+@app.post("/subcategories", response_model=SubcategoryResponse, status_code=status.HTTP_201_CREATED, tags=["Administración - Subcategorías"])
+def create_subcategory(subcategory: SubcategoryCreate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_subcategory = Subcategory(**subcategory.model_dump())
+    db.add(db_subcategory)
+    db.commit()
+    db.refresh(db_subcategory)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_subcategory
+
+@app.get("/subcategories", response_model=List[SubcategoryResponse], tags=["Administración - Subcategorías"])
+def get_subcategories(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return db.query(Subcategory).all()
+
+@app.get("/subcategories/{subcategory_id}", response_model=SubcategoryResponse, tags=["Administración - Subcategorías"])
+def get_subcategory(subcategory_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_subcategory = db.query(Subcategory).filter(Subcategory.id == subcategory_id).first()
+    if not db_subcategory:
+        raise HTTPException(status_code=404, detail="Subcategoría no encontrada")
+    return db_subcategory
+
+@app.put("/subcategories/{subcategory_id}", response_model=SubcategoryResponse, tags=["Administración - Subcategorías"])
+def update_subcategory(subcategory_id: int, subcategory_data: SubcategoryUpdate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_subcategory = db.query(Subcategory).filter(Subcategory.id == subcategory_id).first()
+    if not db_subcategory:
+        raise HTTPException(status_code=404, detail="Subcategoría no encontrada")
+    for key, value in subcategory_data.model_dump(exclude_unset=True).items():
+        setattr(db_subcategory, key, value)
+    db.commit()
+    db.refresh(db_subcategory)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_subcategory
+
+@app.delete("/subcategories/{subcategory_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Administración - Subcategorías"])
+def delete_subcategory(subcategory_id: int, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_subcategory = db.query(Subcategory).filter(Subcategory.id == subcategory_id).first()
+    if not db_subcategory:
+        raise HTTPException(status_code=404, detail="Subcategoría no encontrada")
+    db.delete(db_subcategory)
+    db.commit()
+    background_tasks.add_task(generate_public_json, db, request)
+    return
+
+# CRUD para Marcas
+@app.post("/brands", response_model=BrandResponse, status_code=status.HTTP_201_CREATED, tags=["Administración - Marcas"])
+def create_brand(brand: BrandCreate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if not any([brand.line_id, brand.category_id, brand.subcategory_id]):
+        raise HTTPException(status_code=400, detail="La marca debe estar asociada al menos a una línea, categoría o subcategoría.")
+    db_brand = Brand(**brand.model_dump())
+    db.add(db_brand)
+    db.commit()
+    db.refresh(db_brand)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_brand
+
+@app.get("/brands", response_model=List[BrandResponse], tags=["Administración - Marcas"])
+def get_brands(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return db.query(Brand).all()
+
+@app.get("/brands/{brand_id}", response_model=BrandResponse, tags=["Administración - Marcas"])
+def get_brand(brand_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not db_brand:
+        raise HTTPException(status_code=404, detail="Marca no encontrada")
+    return db_brand
+
+@app.put("/brands/{brand_id}", response_model=BrandResponse, tags=["Administración - Marcas"])
+def update_brand(brand_id: int, brand_data: BrandUpdate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not db_brand:
+        raise HTTPException(status_code=404, detail="Marca no encontrada")
+    for key, value in brand_data.model_dump(exclude_unset=True).items():
+        setattr(db_brand, key, value)
+    db.commit()
+    db.refresh(db_brand)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_brand
+
+@app.delete("/brands/{brand_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Administración - Marcas"])
+def delete_brand(brand_id: int, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not db_brand:
+        raise HTTPException(status_code=404, detail="Marca no encontrada")
+    db.delete(db_brand)
+    db.commit()
+    background_tasks.add_task(generate_public_json, db, request)
+    return
+
+# CRUD para Catálogos
+@app.post("/upload/catalog", response_model=CatalogResponse, tags=["Administración - Catálogos"])
+@limiter.limit("10/minute")
+async def upload_catalog(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    file: UploadFile = File(...),
+    name: str = Form(...),
+    description: Optional[str] = Form(None),
+    line_id: Optional[int] = Form(None),
+    category_id: Optional[int] = Form(None),
+    subcategory_id: Optional[int] = Form(None),
+    brand_id: Optional[int] = Form(None),
+):
+    if not any([line_id, category_id, subcategory_id, brand_id]):
+        raise HTTPException(status_code=400, detail="Debe asociar el catálogo al menos a una línea, categoría, subcategoría o marca.")
+
+    os.makedirs(CATALOGS_DIR, exist_ok=True)
+    safe_filename = f"{secrets.token_hex(8)}_{file.filename.replace(' ', '_')}"
+    file_path = os.path.join(CATALOGS_DIR, safe_filename)
+    
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    finally:
+        file.file.close()
+
+    new_catalog = Catalog(
+        name=name,
+        description=description,
+        file_path=file_path.replace("\\", "/"),
+        line_id=line_id,
+        category_id=category_id,
+        subcategory_id=subcategory_id,
+        brand_id=brand_id,
     )
+    db.add(new_catalog)
+    db.commit()
+    db.refresh(new_catalog)
+    
+    background_tasks.add_task(generate_public_json, db, request)
+    
+    return new_catalog
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+@app.get("/catalogs", response_model=List[CatalogResponse], tags=["Administración - Catálogos"])
+def get_catalogs(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return db.query(Catalog).all()
+
+@app.get("/catalogs/{catalog_id}", response_model=CatalogResponse, tags=["Administración - Catálogos"])
+def get_catalog(catalog_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_catalog = db.query(Catalog).filter(Catalog.id == catalog_id).first()
+    if not db_catalog:
+        raise HTTPException(status_code=404, detail="Catálogo no encontrado")
+    return db_catalog
+
+@app.put("/catalogs/{catalog_id}", response_model=CatalogResponse, tags=["Administración - Catálogos"])
+def update_catalog(catalog_id: int, catalog_data: CatalogUpdate, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_catalog = db.query(Catalog).filter(Catalog.id == catalog_id).first()
+    if not db_catalog:
+        raise HTTPException(status_code=404, detail="Catálogo no encontrado")
+    for key, value in catalog_data.model_dump(exclude_unset=True).items():
+        setattr(db_catalog, key, value)
+    db.commit()
+    db.refresh(db_catalog)
+    background_tasks.add_task(generate_public_json, db, request)
+    return db_catalog
+
+@app.delete("/catalogs/{catalog_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Administración - Catálogos"])
+def delete_catalog(catalog_id: int, request: Request, background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    db_catalog = db.query(Catalog).filter(Catalog.id == catalog_id).first()
+    if not db_catalog:
+        raise HTTPException(status_code=404, detail="Catálogo no encontrado")
+    
+    file_path_to_delete = db_catalog.file_path
+    
+    db.delete(db_catalog)
+    db.commit()
+
+    if file_path_to_delete and os.path.exists(file_path_to_delete):
+        try:
+            os.remove(file_path_to_delete)
+            logger.info(f"Archivo {file_path_to_delete} eliminado del servidor.")
+        except OSError as e:
+            logger.error(f"Error al eliminar el archivo {file_path_to_delete}: {e}")
+
+    background_tasks.add_task(generate_public_json, db, request)
+    return
+
+@app.post("/sync/catalog", tags=["Administración - General"])
+@limiter.limit("5/minute")
+def sync_catalog_manually(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    background_tasks.add_task(generate_public_json, db, request)
+    return {"message": "La sincronización del catálogo ha comenzado en segundo plano."}
+
+# --- END: CRUD Endpoints Protegidos ---

@@ -1,0 +1,580 @@
+{
+    "lines": [
+        {
+            "id": 1,
+            "name": "MATERIAL DE EMPAQUE",
+            "categories": [
+                {
+                    "id": 4,
+                    "name": "Zurchos metálicos y grapadora metálica",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 3,
+                    "name": "Zurchos y grapadora",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 1,
+                    "name": "Cintas",
+                    "subcategories": [
+                        {
+                            "id": 3,
+                            "name": "elec",
+                            "brands": [],
+                            "catalogs": []
+                        },
+                        {
+                            "id": 1,
+                            "name": "enmarcar",
+                            "brands": [],
+                            "catalogs": []
+                        },
+                        {
+                            "id": 2,
+                            "name": "empaque",
+                            "brands": [],
+                            "catalogs": []
+                        }
+                    ],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 5,
+                    "name": "Plásticos (identias y bolsas)",
+                    "subcategories": [
+                        {
+                            "id": 4,
+                            "name": "subca",
+                            "brands": [],
+                            "catalogs": []
+                        }
+                    ],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 6,
+                    "name": "Accesorios",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 2,
+                    "name": "Strech",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 2,
+            "name": "SEGURIDAD INDUSTRIAL",
+            "categories": [
+                {
+                    "id": 10,
+                    "name": "Prototipo visual",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 18,
+                    "name": "Calzado",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 8,
+                    "name": "Ergonomia",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 11,
+                    "name": "Prototipo respiratorio",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 7,
+                    "name": "Señalización-editada",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 17,
+                    "name": "Trabajo de altura",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 9,
+                    "name": "Dotacion",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 14,
+                    "name": "Prototipo manual",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 12,
+                    "name": "Prototipo auditivo",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 15,
+                    "name": "Prototipo facial",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 13,
+                    "name": "Prototipo cabeza",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 16,
+                    "name": "Prototipo corporal",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 3,
+            "name": "QUÍMICOS, PINTURA Y PROD. LIMPIEZA",
+            "categories": [
+                {
+                    "id": 23,
+                    "name": "Adhesivos y sellantes",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 25,
+                    "name": "Accesorios de pintura",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 21,
+                    "name": "Automotriz",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 20,
+                    "name": "Aquitectónica",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 19,
+                    "name": "Lubricantes",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 24,
+                    "name": "Aerosoles",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 26,
+                    "name": "Impermeables",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 22,
+                    "name": "Paños de limpieza",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 4,
+            "name": "ABRASIVOS",
+            "categories": [
+                {
+                    "id": 29,
+                    "name": "Productos aglomerados",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 27,
+                    "name": "Abrasivos recubiertos",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 28,
+                    "name": "Discos abrasivos",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 30,
+                    "name": "Grados de alambre",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 5,
+            "name": "HERRAMIENTA ELÉCTRICA Y MANUAL",
+            "categories": [
+                {
+                    "id": 31,
+                    "name": "Herrramienta eléctrica",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 35,
+                    "name": "Hidrolavadoras y aspiradoras",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 34,
+                    "name": "Accesorios",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 33,
+                    "name": "Herramienta manual",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 32,
+                    "name": "Herramienta de medición",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 6,
+            "name": "TUBERÍA Y GRIFERÍA",
+            "categories": [
+                {
+                    "id": 37,
+                    "name": "HCC accesorios",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 36,
+                    "name": "HCC",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 7,
+            "name": "VARIOS",
+            "categories": [
+                {
+                    "id": 40,
+                    "name": "Cintas especiales",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 38,
+                    "name": "Ruedas y rodachines",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 62,
+                    "name": "otros varios",
+                    "subcategories": [],
+                    "brands": [
+                        {
+                            "id": 1,
+                            "name": "VariousBrand",
+                            "catalogs": []
+                        }
+                    ],
+                    "catalogs": []
+                },
+                {
+                    "id": 39,
+                    "name": "Izaje de carga",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [
+                {
+                    "id": 2,
+                    "name": "braVR",
+                    "catalogs": []
+                }
+            ],
+            "catalogs": []
+        },
+        {
+            "id": 8,
+            "name": "USO AGRÍCOLAS",
+            "categories": [
+                {
+                    "id": 42,
+                    "name": "Plastico",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 43,
+                    "name": "Polisombras y telas",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 41,
+                    "name": "Herramientas",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 9,
+            "name": "EMBELLECIMIENTO AUTOMOTRIZ",
+            "categories": [
+                {
+                    "id": 44,
+                    "name": "Cremas",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 47,
+                    "name": "Cerámicas",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 45,
+                    "name": "Accesorios",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 46,
+                    "name": "Revitalizadores",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 10,
+            "name": "HERRAJERÍA, CERRAJERÍA, TORNILLERÍA",
+            "categories": [
+                {
+                    "id": 48,
+                    "name": "Grapas y clavillos",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 50,
+                    "name": "Herrrajes",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 51,
+                    "name": "Drywal",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 54,
+                    "name": "Accesorios",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 52,
+                    "name": "Clavos y puntillas",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 53,
+                    "name": "Remaches",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 49,
+                    "name": "Productos de seguridad",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 11,
+            "name": "CUBIERTOS",
+            "categories": [
+                {
+                    "id": 55,
+                    "name": "Cubiertos",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 12,
+            "name": "ESTRUCTURA LIVIANA",
+            "categories": [
+                {
+                    "id": 57,
+                    "name": "Perfileria libiana",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 56,
+                    "name": "Placa",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        },
+        {
+            "id": 13,
+            "name": "PRODUCTOS KO",
+            "categories": [
+                {
+                    "id": 60,
+                    "name": "Cintas",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 58,
+                    "name": "Lavaplatos",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 59,
+                    "name": "Seguridad industrial",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                },
+                {
+                    "id": 61,
+                    "name": "Valvulas PVC",
+                    "subcategories": [],
+                    "brands": [],
+                    "catalogs": []
+                }
+            ],
+            "brands": [],
+            "catalogs": []
+        }
+    ]
+}
